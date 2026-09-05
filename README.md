@@ -95,9 +95,7 @@ Add **Meta embed** to any Page Builder editable area, open **Configure widget**,
 apply. The dialog has one visible field; **Source type** (single option, *Single post*) sits in a collapsed **Advanced**
 category and exists for forward compatibility.
 
-<!-- TODO(screenshot): add images/widget-configuration.png, a capture of the "Meta embed" configuration dialog from a
-running Xperience site (the dialog cannot be rendered without a site). -->
-_Screenshot of the widget configuration dialog: to be added once captured from a running site._
+![The Meta embed properties dialog: Post URL on top, Source type inside the expanded Advanced category](images/widget-configuration.png)
 
 In edit mode, read-only mode and preview the embed renders under a transparent overlay so its iframe cannot swallow
 Page Builder drag and click events, and any problem is shown as a message inside the widget:
@@ -214,6 +212,12 @@ request, according to `ScriptMode`:
 
 The Facebook SDK also wants `<div id="fb-root"></div>`. Meta's markup includes one; the widget removes it and renders
 exactly one per request itself (from the first Facebook embed on the page), in every mode.
+
+**In the Page Builder editing UI** two things look different from the live site, and both are harmless: the editing UI
+renders widgets in separate requests, so a page with two Facebook embeds shows the SDK tag (and `fb-root`) twice there,
+never on the live site; and the browser console logs `SecurityError … Blocked a frame … from accessing a cross-origin
+frame` lines because Kentico's admin script tries to attach to every iframe on the page, including the ones Meta's SDKs
+create. Verified on Xperience 31.8.3.
 
 **CSP hosts** a strict policy must allow: `script-src` `https://www.instagram.com https://www.threads.com https://connect.facebook.net`;
 `frame-src` `https://www.instagram.com https://www.threads.com https://www.facebook.com` (the SDKs create the iframes).
