@@ -1,6 +1,6 @@
 # Meta embeds for Xperience by Kentico
 
-[![CI: Build and Test](https://github.com/Koukovistas/xperience-community-meta-embeds/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Koukovistas/xperience-community-meta-embeds/actions/workflows/ci.yml)
+[![CI: Build and Test](https://github.com/akoukovistas/xperience-community-meta-embeds/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/akoukovistas/xperience-community-meta-embeds/actions/workflows/ci.yml)
 [![NuGet Package](https://img.shields.io/nuget/v/XperienceCommunity.MetaEmbeds.svg)](https://www.nuget.org/packages/XperienceCommunity.MetaEmbeds)
 
 Paste a public Threads, Instagram or Facebook post URL into a Page Builder widget. Tokenless, cached, sanitised.
