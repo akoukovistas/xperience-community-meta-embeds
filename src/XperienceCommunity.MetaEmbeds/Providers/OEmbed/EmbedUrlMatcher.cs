@@ -30,7 +30,9 @@ public sealed class EmbedUrlMatcher : IEmbedUrlMatcher
             return false;
         }
 
-        if (!Uri.TryCreate(text, UriKind.Absolute, out var uri))
+        // On Unix, Uri.TryCreate treats "/p/…" as an absolute file:// URI, so a rooted path is rejected up front to give
+        // the same reason on every platform.
+        if (text[0] is '/' or '\\' || !Uri.TryCreate(text, UriKind.Absolute, out var uri))
         {
             reason = "not an absolute URL";
             return false;

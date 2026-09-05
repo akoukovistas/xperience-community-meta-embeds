@@ -11,7 +11,7 @@ see [Support](#support).
 
 ## Contents
 
-- [What this package does not do (read first)](#what-this-package-does-not-do-read-first)
+- [What it does](#what-it-does)
 - [Supported URL formats](#supported-url-formats)
 - [Library version matrix](#library-version-matrix)
 - [Installation](#installation)
@@ -25,18 +25,19 @@ see [Support](#support).
 - [Verification notes](#verification-notes)
 - [Contributing, license, support](#contributing)
 
-## What this package does not do (read first)
+## What it does
 
-- **No account feeds, hashtag feeds or tagged-media feeds.** Only single posts, reels and videos identified by their URL.
-- **No stories, no private content.** Meta's oEmbed endpoints only return public, embeddable media.
-- **No author names, no thumbnails, no captions as data.** Meta removed `author_name`, `author_url` and `thumbnail_*`
-  from the oEmbed responses on 2025-11-03. The response carries the embed markup and nothing else.
-- **Nothing that needs a Business/Creator account, a Meta app, App Review, or the Graph API.** Feeds need long-lived
-  tokens, refresh handling and an App Review; that is a different product with a different operating burden.
+- One **Meta embed** Page Builder widget for public Threads posts, Instagram posts and reels, and Facebook posts and
+  reels. Editors paste the URL; the platform is detected from it.
+- Fetches Meta's oEmbed markup server-side, sanitises it to a per-platform allowlist, caches it, and loads each Meta SDK
+  once per page.
+- Works with no Meta app, no token and no configuration. Credentials, cache lifetimes and script loading are optional
+  settings.
+- Layout, caption and theme options in the widget, plus stable CSS classes for the site's own styling.
+- Clear editor messages for every failure; the live site renders nothing rather than an error.
 
-Feeds are planned as a separate package, `XperienceCommunity.MetaEmbeds.Feeds`, built on the same
-`IEmbedProvider` / `EmbedResult` / `MetaEmbedsOptions.Credentials` seams this package exposes. Nothing token- or
-Graph-shaped is in this package's public API.
+Today that is the same scope as Meta's official WordPress plugin: single public items only, no feeds. The provider and
+caching seams are public so the package can grow into feeds or other sources later without changing what is here.
 
 ## Supported URL formats
 
@@ -53,11 +54,8 @@ The scope is deliberately identical to Meta's official WordPress plugin ([`faceb
 The URL an editor types is validated against these shapes before any network call and is only ever sent to Meta as a
 query parameter; it is never fetched.
 
-**Instagram profile URLs (`instagram.com/{user}`), honestly:** Meta's documentation and the WordPress plugin list them
-as supported, so the URL matcher accepts them for parity. Every profile URL tested against the tokenless endpoint on
-2026-09-04 returned HTTP 400 (`error_subcode 2207047`, "does not refer to an embeddable media"). Editors get the
-message "Meta rejected this URL as not embeddable"; the live site renders nothing. If Meta starts serving them, this
-package will render them without a code change.
+Instagram profile URLs (`instagram.com/{user}`) are listed as supported by Meta and accepted by the URL check, but
+testing returns HTTP 400; editors see "Meta rejected this URL as not embeddable".
 
 ## Library version matrix
 

@@ -17,9 +17,9 @@ A clear and concise description of what you want to happen.
 A clear and concise description of any alternative solutions or features you've considered.
 
 **Scope check**
-Account feeds, hashtag feeds, stories and anything that needs a Meta app, App Review or Graph API tokens are out of
-scope for this package by design (see the README). They belong to the planned `XperienceCommunity.MetaEmbeds.Feeds`
-package; please say so if your request is about one of those.
+Today the package embeds single public posts, reels and videos by URL. If your request is about feeds, stories or
+anything that needs a Meta app or Graph API token, say so; those would be a larger addition and it helps to know the
+use case.
 
 **Additional context**
 Add any other context or screenshots about the feature request here.
