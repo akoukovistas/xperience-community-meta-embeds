@@ -30,8 +30,8 @@ public sealed class MetaEmbedsModule : Module
     {
         base.OnPreInit(parameters);
 
-        // Services is null when the module is pre-initialised outside a DI host (e.g. some test harnesses);
-        // in that case consumers call AddXperienceCommunityMetaEmbeds() explicitly.
+        // Services is null when the module is pre-initialised outside a DI host, for example by some test
+        // harnesses. Consumers in that situation register the services with the explicit extension method.
         parameters?.Services?.AddXperienceCommunityMetaEmbedsFromHostConfiguration();
     }
 }

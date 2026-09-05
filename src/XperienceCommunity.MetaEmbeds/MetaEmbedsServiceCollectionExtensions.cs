@@ -110,8 +110,7 @@ public static class MetaEmbedsServiceCollectionExtensions
     }
 
     /// <summary>Registered once so repeated <c>TryAddMetaEmbedsServices</c> calls do not re-run <c>AddHttpClient</c>.</summary>
-    private sealed class MetaEmbedsHttpClientMarker
-    {
-        public string ClientName => MetaEmbedsConstants.HttpClientName;
-    }
+#pragma warning disable S2094 // Intentionally empty: the type's presence in the service collection is the information.
+    private sealed class MetaEmbedsHttpClientMarker;
+#pragma warning restore S2094
 }

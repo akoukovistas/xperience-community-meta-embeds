@@ -106,18 +106,8 @@ public sealed class EmbedResolver : IEmbedResolver
         }
     }
 
-    private IEmbedProvider? FindProvider(EmbedRequest request)
-    {
-        foreach (var provider in providers)
-        {
-            if (provider.Supports(request))
-            {
-                return provider;
-            }
-        }
-
-        return null;
-    }
+    private IEmbedProvider? FindProvider(EmbedRequest request) =>
+        providers.FirstOrDefault(provider => provider.Supports(request));
 
     private void LogProviderFailure(IEmbedProvider? provider, string message, Exception? exception)
     {

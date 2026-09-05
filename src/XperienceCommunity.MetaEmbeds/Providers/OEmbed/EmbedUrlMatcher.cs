@@ -101,14 +101,6 @@ public sealed class EmbedUrlMatcher : IEmbedUrlMatcher
             return false;
         }
 
-        foreach (var c in host)
-        {
-            if (!char.IsAsciiLetterOrDigit(c) && c != '-' && c != '.')
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return host.All(c => char.IsAsciiLetterOrDigit(c) || c == '-' || c == '.');
     }
 }
