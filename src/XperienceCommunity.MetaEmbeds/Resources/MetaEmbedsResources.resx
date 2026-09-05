@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="xperiencecommunity.metaembeds.widget.name" xml:space="preserve">
+    <value>Meta embed</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.widget.description" xml:space="preserve">
+    <value>Embeds a public Threads, Instagram or Facebook post from its URL.</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.url.label" xml:space="preserve">
+    <value>Post URL</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.url.explanationText" xml:space="preserve">
+    <value>Paste the public link to the post. Supported: instagram.com/p/… or /reel/…, threads.com/@user/post/… or /t/…, facebook.com/user/posts/… or /reel/…</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.sourceType.label" xml:space="preserve">
+    <value>Source type</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.sourceType.explanationText" xml:space="preserve">
+    <value>What the URL points to. This version supports single posts, reels and videos only.</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.sourceType.options.post" xml:space="preserve">
+    <value>Single post</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.category.advanced" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.failure.notconfigured" xml:space="preserve">
+    <value>This widget needs a post URL. Open Configure widget and paste one.</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.failure.invalidinput" xml:space="preserve">
+    <value>That isn't a valid web address. Paste the full https:// link to the post.</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.failure.unsupportedinput" xml:space="preserve">
+    <value>That URL isn't a supported Threads, Instagram or Facebook post link. Supported: instagram.com/p/… or /reel/…, threads.com/@user/post/… or /t/…, facebook.com/user/posts/… or /reel/…</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.failure.notfound" xml:space="preserve">
+    <value>Meta can't embed this post. It may be private, deleted, or not embeddable.</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.failure.rejectedbyprovider" xml:space="preserve">
+    <value>Meta rejected this URL as not embeddable.</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.failure.transient" xml:space="preserve">
+    <value>Couldn't reach Meta right now; the embed will appear once the service responds.</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.failure.unexpectedmarkup" xml:space="preserve">
+    <value>Meta returned markup this widget doesn't recognise. Update the package or report it.</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.failure.internal" xml:space="preserve">
+    <value>Embed failed; see the event log.</value>
+  </data>
+</root>

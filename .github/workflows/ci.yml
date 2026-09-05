@@ -1,0 +1,43 @@
+name: "CI: Build and Test"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build_and_test:
+    name: Build and Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      DOTNET_NOLOGO: 1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The library targets net8.0; the .slnx solution and global.json (rollForward latestMajor) need a 10.x SDK.
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Restore (locked)
+        run: dotnet restore --locked-mode
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      # Live contract tests call Meta's endpoints and are opt-in (METAEMBEDS_LIVE=1); they never run in CI.
+      - name: Test
+        run: dotnet test --configuration Release --no-build --filter "TestCategory!=Live"
