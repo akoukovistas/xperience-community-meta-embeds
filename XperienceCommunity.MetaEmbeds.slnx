@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/XperienceCommunity.MetaEmbeds/XperienceCommunity.MetaEmbeds.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/XperienceCommunity.MetaEmbeds.Tests/XperienceCommunity.MetaEmbeds.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,1 @@
+{"error":{"message":"Invalid parameter","type":"OAuthException","code":100,"error_subcode":2207049,"is_transient":false,"error_user_title":"Invalid Dimensions","error_user_msg":"The request parameter 'maxwidth' must be an integer between 320 and 658.","fbtrace_id":"AU2qOC8nIjASMkLGGB-DgCF"}}

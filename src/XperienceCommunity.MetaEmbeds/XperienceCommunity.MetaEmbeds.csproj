@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <RootNamespace>XperienceCommunity.MetaEmbeds</RootNamespace>
+    <AssemblyName>XperienceCommunity.MetaEmbeds</AssemblyName>
+    <PackageId>XperienceCommunity.MetaEmbeds</PackageId>
+    <Title>Meta embeds for Xperience by Kentico</Title>
+    <Description>Page Builder widget that embeds a public Threads, Instagram or Facebook post from a pasted URL using Meta's tokenless oEmbed endpoints. Server-side fetch, cached, sanitised. No Meta app, no App Review, no configuration.</Description>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\images\icon.png" Pack="true" PackagePath="" Visible="false" Condition="Exists('..\..\images\icon.png')" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Kentico.Xperience.WebApp" />
+    <PackageReference Include="HtmlSanitizer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\MetaEmbedsResources.resx" Condition="Exists('Resources\MetaEmbedsResources.resx')">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>MetaEmbedsResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="$(AssemblyName).Tests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+</Project>
