@@ -94,9 +94,10 @@ public class MetaEmbedWidgetTests
     }
 
     private static ComponentViewModel<MetaEmbedWidgetProperties> Model(string url = "https://www.instagram.com/p/fA9uwTtkSN/", string? sourceType = "post") =>
-        ComponentViewModel<MetaEmbedWidgetProperties>.Create(
-            new RoutedWebPage { LanguageName = "en" },
-            new MetaEmbedWidgetProperties { Url = url, SourceType = sourceType! });
+        Model(new MetaEmbedWidgetProperties { Url = url, SourceType = sourceType! });
+
+    private static ComponentViewModel<MetaEmbedWidgetProperties> Model(MetaEmbedWidgetProperties properties) =>
+        ComponentViewModel<MetaEmbedWidgetProperties>.Create(new RoutedWebPage { LanguageName = "en" }, properties);
 
     private static MetaEmbedWidgetViewModel ViewModelOf(IViewComponentResult result)
     {
@@ -105,6 +106,151 @@ public class MetaEmbedWidgetTests
         Assert.That(view.ViewName, Is.EqualTo(MetaEmbedWidget.ViewPath));
         Assert.That(view.ViewData?.Model, Is.InstanceOf<MetaEmbedWidgetViewModel>());
         return (MetaEmbedWidgetViewModel)view.ViewData!.Model!;
+    }
+
+    // ---- appearance --------------------------------------------------------------------------------------------
+
+    [Test]
+    public async Task Appearance_Defaults_ProduceNaturalClassesNoStyleAndNoParameters()
+    {
+        var resolver = ResolverReturning(EmbedResult.Success(Item("instagram", InstagramHtml, InstagramSdk)));
+        var widget = CreateWidget(resolver, SharedRegistry(new DefaultHttpContext()), edit: false);
+
+        var model = ViewModelOf(await widget.InvokeAsync(Model()));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(model.CssClass, Is.EqualTo("meta-embed meta-embed--instagram meta-embed--layout-natural"));
+            Assert.That(model.WrapperStyle, Is.Null);
+            Assert.That(model.Presentation, Is.EqualTo(EmbedPresentation.Default));
+            Assert.That(model.Html, Is.EqualTo(InstagramHtml));
+        });
+        await resolver.Received(1).ResolveAsync(Arg.Is<EmbedRequest>(r => r.Parameters.Count == 0), Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task Appearance_HideCaption_SendsTheParameterAndAddsTheModifierClass()
+    {
+        var resolver = ResolverReturning(EmbedResult.Success(Item("instagram", InstagramHtml, InstagramSdk)));
+        var widget = CreateWidget(resolver, SharedRegistry(new DefaultHttpContext()), edit: false);
+
+        var model = ViewModelOf(await widget.InvokeAsync(Model(new MetaEmbedWidgetProperties
+        {
+            Url = "https://www.instagram.com/p/fA9uwTtkSN/",
+            HideCaption = true,
+        })));
+
+        Assert.That(model.CssClass, Does.Contain("meta-embed--no-caption"));
+        await resolver.Received(1).ResolveAsync(
+            Arg.Is<EmbedRequest>(r => r.Parameters[EmbedRequestParameters.HideCaption] == "true"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task Appearance_Centered_AddsLayoutClassAndFlexStyle()
+    {
+        var widget = CreateWidget(
+            ResolverReturning(EmbedResult.Success(Item("instagram", InstagramHtml, InstagramSdk))),
+            SharedRegistry(new DefaultHttpContext()),
+            edit: false);
+
+        var model = ViewModelOf(await widget.InvokeAsync(Model(new MetaEmbedWidgetProperties
+        {
+            Url = "https://www.instagram.com/p/fA9uwTtkSN/",
+            Layout = "Centered",
+        })));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(model.CssClass, Does.Contain("meta-embed--layout-centered"));
+            Assert.That(model.WrapperStyle, Is.EqualTo("display:flex;justify-content:center;"));
+        });
+    }
+
+    [Test]
+    public async Task Appearance_FluidFacebookPost_RewritesDataWidthAndStillStripsRoot()
+    {
+        var widget = CreateWidget(
+            ResolverReturning(EmbedResult.Success(Item("facebook-post", FacebookHtml, FacebookSdk))),
+            SharedRegistry(new DefaultHttpContext()),
+            edit: false);
+
+        var model = ViewModelOf(await widget.InvokeAsync(Model(new MetaEmbedWidgetProperties
+        {
+            Url = "https://www.facebook.com/zuck/posts/1",
+            Layout = EmbedLayouts.Fluid,
+        })));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(model.Html, Does.Contain("data-width=\"auto\""));
+            Assert.That(model.Html, Does.Not.Contain("data-width=\"552\""));
+            Assert.That(model.Html, Does.Not.Contain("fb-root"), "root is still stripped and rendered once by the view");
+            Assert.That(model.EmitFacebookRoot, Is.True);
+            Assert.That(model.CssClass, Is.EqualTo("meta-embed meta-embed--facebook-post meta-embed--layout-fluid"));
+            Assert.That(model.WrapperStyle, Is.Null);
+        });
+    }
+
+    [Test]
+    public async Task Appearance_DarkThreads_RewritesThemeAndAddsModifierClass()
+    {
+        const string threadsHtml = "<blockquote class=\"text-post-media\" data-theme=\"light\"></blockquote>";
+        var widget = CreateWidget(
+            ResolverReturning(EmbedResult.Success(Item("threads", threadsHtml, new Uri("https://www.threads.com/embed.js")))),
+            SharedRegistry(new DefaultHttpContext()),
+            edit: false);
+
+        var model = ViewModelOf(await widget.InvokeAsync(Model(new MetaEmbedWidgetProperties
+        {
+            Url = "https://www.threads.com/t/DWjTI0cgH5O/",
+            Theme = EmbedThemes.Dark,
+        })));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(model.Html, Is.EqualTo("<blockquote class=\"text-post-media\" data-theme=\"dark\"></blockquote>"));
+            Assert.That(model.CssClass, Does.Contain("meta-embed--theme-dark"));
+        });
+    }
+
+    [Test]
+    public async Task Appearance_DarkThemeOnInstagram_LeavesMarkupAlone()
+    {
+        var widget = CreateWidget(
+            ResolverReturning(EmbedResult.Success(Item("instagram", InstagramHtml, InstagramSdk))),
+            SharedRegistry(new DefaultHttpContext()),
+            edit: false);
+
+        var model = ViewModelOf(await widget.InvokeAsync(Model(new MetaEmbedWidgetProperties
+        {
+            Url = "https://www.instagram.com/p/fA9uwTtkSN/",
+            Theme = EmbedThemes.Dark,
+        })));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(model.Html, Is.EqualTo(InstagramHtml));
+            Assert.That(model.CssClass, Does.Contain("meta-embed--theme-dark"), "the CSS hook is still there for site styling");
+        });
+    }
+
+    [Test]
+    public async Task Appearance_UnknownValues_FallBackToDefaults()
+    {
+        var widget = CreateWidget(
+            ResolverReturning(EmbedResult.Success(Item("instagram", InstagramHtml, InstagramSdk))),
+            SharedRegistry(new DefaultHttpContext()),
+            edit: false);
+
+        var model = ViewModelOf(await widget.InvokeAsync(Model(new MetaEmbedWidgetProperties
+        {
+            Url = "https://www.instagram.com/p/fA9uwTtkSN/",
+            Layout = "sideways",
+            Theme = null!,
+        })));
+
+        Assert.That(model.Presentation, Is.EqualTo(EmbedPresentation.Default));
     }
 
     // ---- failure paths -----------------------------------------------------------------------------------------

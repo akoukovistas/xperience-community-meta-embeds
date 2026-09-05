@@ -46,6 +46,18 @@ profile URLs (`instagram.com/{user}`) are accepted by the URL check for parity w
 tokenless endpoint rejected every profile URL tested on 2026-09-04, so editors see "Meta rejected this URL as not
 embeddable" and the live site renders nothing.
 
+The **Appearance** category (expanded by default) holds the three design choices Meta's embeds actually support:
+
+| Option           | Values                                   | Effect                                                                                                                                                       |
+|------------------|------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Layout**       | *Natural* (default), *Centered*, *Fluid* | *Natural*: Meta's width, left-aligned. *Centered*: same width, centered in the column. *Fluid*: Facebook posts follow the column width (`data-width="auto"`); Instagram and Threads are already fluid up to 658px. |
+| **Hide caption** | off (default), on                        | Instagram only: the caption under the media is left out (`hidecaption=true` on the oEmbed call). Ignored by the other platforms.                             |
+| **Theme**        | *Light* (default), *Dark*                | Threads only: dark styling of the Threads card (`data-theme="dark"`). Ignored by the other platforms.                                                        |
+
+Every embed is wrapped in `<div class="meta-embed meta-embed--{platform} meta-embed--layout-{layout}">`, with
+`meta-embed--theme-dark` and `meta-embed--no-caption` added when those options are on. The package ships no CSS; style
+those classes in the site stylesheet (the README has a starter snippet).
+
 The **Advanced** category (collapsed by default) holds **Source type**, which has a single option, *Single post*, in
 this version. Leave it alone; it exists so a future release can add other source types without a migration.
 

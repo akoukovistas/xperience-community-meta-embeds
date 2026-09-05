@@ -13,4 +13,10 @@ public sealed class EmbedRequest
 
     /// <summary>Page language, for future locale-aware SDKs. Optional.</summary>
     public string? Culture { get; init; }
+
+    /// <summary>
+    /// Provider-specific request parameters, e.g. <see cref="EmbedRequestParameters.HideCaption"/>. Providers read the
+    /// keys they know and ignore the rest. Parameters that change the provider's response are part of the cache key.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> Parameters { get; init; } = EmbedRequestParameters.None;
 }

@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 
 using XperienceCommunity.MetaEmbeds.Providers;
+using XperienceCommunity.MetaEmbeds.Rendering;
 using XperienceCommunity.MetaEmbeds.Widgets;
 
 namespace XperienceCommunity.MetaEmbeds.Tests;
@@ -89,7 +90,8 @@ public class WidgetPropertiesDefaultsTests
         var sourceType = type.GetProperty(nameof(MetaEmbedWidgetProperties.SourceType))!;
         var url = type.GetProperty(nameof(MetaEmbedWidgetProperties.Url))!;
 
-        var category = type.GetCustomAttributes<FormCategoryAttribute>().Single();
+        var category = type.GetCustomAttributes<FormCategoryAttribute>()
+            .Single(c => c.Label == "{$xperiencecommunity.metaembeds.properties.category.advanced$}");
         var dropDown = sourceType.GetCustomAttribute<DropDownComponentAttribute>();
         var urlInput = url.GetCustomAttribute<TextInputComponentAttribute>()!;
 
@@ -97,13 +99,71 @@ public class WidgetPropertiesDefaultsTests
         {
             Assert.That(category.Collapsible, Is.True);
             Assert.That(category.IsCollapsed, Is.True);
-            Assert.That(category.Label, Is.EqualTo("{$xperiencecommunity.metaembeds.properties.category.advanced$}"));
             Assert.That(dropDown, Is.Not.Null);
             Assert.That(dropDown!.Options, Does.StartWith(EmbedSourceTypes.Post + ";"));
             Assert.That(dropDown.Options, Does.Not.Contain('\n'), "exactly one option");
             // Categories own the properties ordered after them: Url must precede the category, SourceType follow it.
             Assert.That(urlInput.Order, Is.LessThan(category.Order));
             Assert.That(dropDown.Order, Is.GreaterThan(category.Order));
+        });
+    }
+
+    [Test]
+    public void Deserialize_WithoutAppearanceProperties_UsesNaturalLightAndCaptionShown()
+    {
+        var properties = JsonConvert.DeserializeObject<MetaEmbedWidgetProperties>(
+            "{\"url\":\"https://www.instagram.com/p/fA9uwTtkSN/\",\"sourceType\":\"post\"}");
+
+        Assert.That(properties, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(properties!.Layout, Is.EqualTo(EmbedLayouts.Natural));
+            Assert.That(properties.Theme, Is.EqualTo(EmbedThemes.Light));
+            Assert.That(properties.HideCaption, Is.False);
+        });
+    }
+
+    [Test]
+    public void Deserialize_ExplicitNullAppearanceStrings_NormalizeToDefaults()
+    {
+        var properties = JsonConvert.DeserializeObject<MetaEmbedWidgetProperties>(
+            "{\"url\":\"x\",\"layout\":null,\"theme\":null}");
+
+        Assert.That(properties, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(EmbedLayouts.Normalize(properties!.Layout), Is.EqualTo(EmbedLayouts.Natural));
+            Assert.That(EmbedThemes.Normalize(properties.Theme), Is.EqualTo(EmbedThemes.Light));
+        });
+    }
+
+    [Test]
+    public void AppearanceProperties_SitInAnExpandedCategoryBetweenUrlAndAdvanced()
+    {
+        var type = typeof(MetaEmbedWidgetProperties);
+        var categories = type.GetCustomAttributes<FormCategoryAttribute>().OrderBy(c => c.Order).ToList();
+        var appearance = categories.Single(c => c.Label == "{$xperiencecommunity.metaembeds.properties.category.appearance$}");
+        var advanced = categories.Single(c => c.Label == "{$xperiencecommunity.metaembeds.properties.category.advanced$}");
+
+        var url = type.GetProperty(nameof(MetaEmbedWidgetProperties.Url))!.GetCustomAttribute<TextInputComponentAttribute>()!;
+        var layout = type.GetProperty(nameof(MetaEmbedWidgetProperties.Layout))!.GetCustomAttribute<DropDownComponentAttribute>()!;
+        var hideCaption = type.GetProperty(nameof(MetaEmbedWidgetProperties.HideCaption))!.GetCustomAttribute<CheckBoxComponentAttribute>()!;
+        var theme = type.GetProperty(nameof(MetaEmbedWidgetProperties.Theme))!.GetCustomAttribute<DropDownComponentAttribute>()!;
+        var sourceType = type.GetProperty(nameof(MetaEmbedWidgetProperties.SourceType))!.GetCustomAttribute<DropDownComponentAttribute>()!;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(categories, Has.Count.EqualTo(2));
+            Assert.That(appearance.IsCollapsed, Is.False, "design options are visible by default");
+            Assert.That(url.Order, Is.LessThan(appearance.Order));
+            Assert.That(layout.Order, Is.InRange(appearance.Order + 1, advanced.Order - 1));
+            Assert.That(hideCaption.Order, Is.InRange(appearance.Order + 1, advanced.Order - 1));
+            Assert.That(theme.Order, Is.InRange(appearance.Order + 1, advanced.Order - 1));
+            Assert.That(sourceType.Order, Is.GreaterThan(advanced.Order));
+            Assert.That(layout.Options.Split('\n'), Has.Length.EqualTo(3));
+            Assert.That(layout.Options, Does.StartWith(EmbedLayouts.Natural + ";"), "first option is the default");
+            Assert.That(theme.Options.Split('\n'), Has.Length.EqualTo(2));
+            Assert.That(theme.Options, Does.StartWith(EmbedThemes.Light + ";"), "first option is the default");
         });
     }
 }

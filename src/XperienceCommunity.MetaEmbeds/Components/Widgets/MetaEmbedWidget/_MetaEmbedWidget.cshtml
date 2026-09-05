@@ -16,9 +16,8 @@
 }
 else if (!string.IsNullOrEmpty(Model.Html))
 {
-    var cssClass = string.IsNullOrEmpty(Model.EndpointKey)
-        ? "meta-embed"
-        : "meta-embed meta-embed--" + Model.EndpointKey;
+    var cssClass = string.IsNullOrWhiteSpace(Model.CssClass) ? "meta-embed" : Model.CssClass;
+    var layoutStyle = Model.WrapperStyle ?? string.Empty;
 
     if (Model.EmitFacebookRoot)
     {
@@ -28,8 +27,14 @@ else if (!string.IsNullOrEmpty(Model.Html))
     if (Model.IsEditMode)
     {
         @* The transparent overlay keeps the embed's iframe from swallowing Page Builder drag and click events. *@
-        <div class="@cssClass" style="position: relative;">
+        <div class="@cssClass" style="position: relative;@layoutStyle">
             <div style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1000;"></div>
+            @Html.Raw(Model.Html)
+        </div>
+    }
+    else if (layoutStyle.Length > 0)
+    {
+        <div class="@cssClass" style="@layoutStyle">
             @Html.Raw(Model.Html)
         </div>
     }

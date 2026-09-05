@@ -232,6 +232,86 @@ public class OEmbedProviderTests
     }
 
     [Test]
+    public async Task Resolve_InstagramWithHideCaption_AppendsHideCaptionParameter()
+    {
+        var h = new Harness();
+        h.Handler.RespondWithJson(HttpStatusCode.OK, TestFixtures.ReadJson(TestFixtures.InstagramPost));
+
+        var result = await h.Provider.ResolveAsync(new EmbedRequest
+        {
+            SourceType = "post",
+            Input = InstagramPostUrl,
+            Parameters = new Dictionary<string, string> { [EmbedRequestParameters.HideCaption] = "true" },
+        }, CancellationToken.None);
+
+        var query = QueryHelpers.ParseQuery(h.Handler.Requests.Single().RequestUri!.Query);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(query["hidecaption"].ToString(), Is.EqualTo("true"));
+            Assert.That(query["url"].ToString(), Is.EqualTo(InstagramPostUrl));
+        });
+    }
+
+    [TestCase("false")]
+    [TestCase("")]
+    [TestCase("no")]
+    public async Task Resolve_InstagramWithHideCaptionOff_SendsNoHideCaptionParameter(string value)
+    {
+        var h = new Harness();
+        h.Handler.RespondWithJson(HttpStatusCode.OK, TestFixtures.ReadJson(TestFixtures.InstagramPost));
+
+        await h.Provider.ResolveAsync(new EmbedRequest
+        {
+            SourceType = "post",
+            Input = InstagramPostUrl,
+            Parameters = new Dictionary<string, string> { [EmbedRequestParameters.HideCaption] = value },
+        }, CancellationToken.None);
+
+        Assert.That(h.Handler.Requests.Single().RequestUri!.Query, Does.Not.Contain("hidecaption"));
+    }
+
+    [Test]
+    public async Task Resolve_ThreadsWithHideCaption_IgnoresTheParameter()
+    {
+        var h = new Harness();
+        h.Handler.RespondWithJson(HttpStatusCode.OK, TestFixtures.ReadJson(TestFixtures.ThreadsPost));
+
+        await h.Provider.ResolveAsync(new EmbedRequest
+        {
+            SourceType = "post",
+            Input = "https://www.threads.com/@threads/post/DWjTI0cgH5O/",
+            Parameters = new Dictionary<string, string> { [EmbedRequestParameters.HideCaption] = "true" },
+        }, CancellationToken.None);
+
+        Assert.That(h.Handler.Requests.Single().RequestUri!.Query, Does.Not.Contain("hidecaption"));
+    }
+
+    [Test]
+    public void OEmbedRequestParameters_For_OnlyInstagramProducesAVariant()
+    {
+        var on = new Dictionary<string, string> { [EmbedRequestParameters.HideCaption] = "true" };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(OEmbedRequestParameters.For(MetaOEmbedEndpoints.Instagram, on).CacheVariant, Is.EqualTo("hidecaption"));
+            Assert.That(OEmbedRequestParameters.For(MetaOEmbedEndpoints.Instagram, null).CacheVariant, Is.Empty);
+            Assert.That(OEmbedRequestParameters.For(MetaOEmbedEndpoints.Threads, on).CacheVariant, Is.Empty);
+            Assert.That(OEmbedRequestParameters.For(MetaOEmbedEndpoints.FacebookPost, on).CacheVariant, Is.Empty);
+            Assert.That(OEmbedRequestParameters.For(MetaOEmbedEndpoints.FacebookVideo, on).CacheVariant, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void BuildRequestUri_WithHideCaption_PlacesParameterBeforeAccessToken()
+    {
+        var uri = MetaOEmbedProvider.BuildRequestUri(
+            MetaOEmbedEndpoints.Instagram, new Uri(InstagramPostUrl), new MetaEmbedsOptions(), "t", new OEmbedRequestParameters(true));
+
+        Assert.That(uri.Query, Does.EndWith("&hidecaption=true&access_token=t"));
+    }
+
+    [Test]
     public async Task Resolve_WithAccessToken_SendsItVerbatim()
     {
         var h = new Harness(o => o.Credentials.AccessToken = "EAAB.secret-token_1|x");

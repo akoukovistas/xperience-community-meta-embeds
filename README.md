@@ -92,10 +92,51 @@ Both calls are idempotent with the module. To substitute a service, register you
 ## Using the widget
 
 Add **Meta embed** to any Page Builder editable area, open **Configure widget**, paste the post URL into **Post URL**,
-apply. The dialog has one visible field; **Source type** (single option, *Single post*) sits in a collapsed **Advanced**
-category and exists for forward compatibility.
+apply. Everything else is optional: the **Appearance** category holds three design choices, and **Source type**
+(single option, *Single post*) sits in a collapsed **Advanced** category for forward compatibility.
 
-![The Meta embed properties dialog: Post URL on top, Source type inside the expanded Advanced category](images/widget-configuration.png)
+![The Meta embed properties dialog: Post URL on top, the Appearance category with Layout, Hide caption and Theme, and the collapsed Advanced category](images/widget-configuration.png)
+
+### Appearance options
+
+| Option           | Values                                   | What it does                                                                                                                                                                                             |
+|------------------|------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Layout**       | *Natural* (default), *Centered*, *Fluid* | *Natural* keeps Meta's own width and left alignment. *Centered* keeps the width and centers the embed in its column (the wrapper gets `display:flex; justify-content:center`). *Fluid* sets `data-width="auto"` on Facebook posts so they follow the column; Instagram and Threads markup is already fluid up to Meta's 658px maximum, so for them *Fluid* looks like *Natural*. |
+| **Hide caption** | off (default), on                        | Instagram only. Asks Meta's oEmbed endpoint for `hidecaption=true`; the caption under the media disappears. Cached separately from the captioned version. Ignored by Threads and Facebook.               |
+| **Theme**        | *Light* (default), *Dark*                | Threads only. Rewrites the `data-theme` attribute Meta's markup carries, so the Threads SDK renders its dark styling. Ignored by Instagram and Facebook.                                                    |
+
+Everything inside the wrapper is Meta's own markup and, after their SDK runs, Meta's own iframe. The package ships no
+CSS and does not fight Meta's styling; the options above are the parameters Meta actually exposes. Anything beyond
+them (spacing, background, borders, responsive breakpoints) belongs to the site's stylesheet, using the hooks below.
+
+### CSS hooks
+
+Every embed is wrapped in a `div` with predictable, prefixed classes:
+
+| Class                                                                                                       | When                                                                                                |
+|-------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| `meta-embed`                                                                                                | always                                                                                              |
+| `meta-embed--instagram`, `meta-embed--threads`, `meta-embed--facebook-post`, `meta-embed--facebook-video`   | per platform                                                                                        |
+| `meta-embed--layout-natural`, `meta-embed--layout-centered`, `meta-embed--layout-fluid`                     | the chosen layout                                                                                   |
+| `meta-embed--theme-dark`                                                                                    | *Theme* is *Dark* (on every platform, so a site can frame dark Instagram/Facebook embeds itself)    |
+| `meta-embed--no-caption`                                                                                    | *Hide caption* is on                                                                                |
+| `meta-embed--message`                                                                                       | the editor-only message box (never on the live site)                                                |
+
+A starting point for a site stylesheet:
+
+```css
+/* Space embeds like other blocks and stop very tall reels from dominating a column. */
+.meta-embed { margin: 2rem 0; }
+.meta-embed--facebook-video iframe { max-height: 80vh; }
+
+/* A dark page: give Instagram and Facebook embeds (which have no dark mode) a matching frame. */
+.meta-embed--theme-dark { background: #111; padding: 1rem; border-radius: 12px; }
+
+/* Cap the width of fluid Facebook posts on very wide columns. */
+.meta-embed--facebook-post.meta-embed--layout-fluid { max-width: 750px; }
+```
+
+The classes are stable API: they are covered by tests, and any change to them would be a breaking change in the changelog.
 
 In edit mode, read-only mode and preview the embed renders under a transparent overlay so its iframe cannot swallow
 Page Builder drag and click events, and any problem is shown as a message inside the widget:
@@ -149,11 +190,45 @@ Everything is optional. `appsettings.json` with every default spelled out:
 | `HttpTimeout`                   | 5 s        | Timeout of a single oEmbed call.                                                                                                           |
 | `MaxResponseBytes`              | 65536      | Responses larger than this are rejected as transient failures.                                                                             |
 
-**Credentials: when would you want them?** By default all calls are tokenless. Meta states the tokenless endpoints
-"currently return the same technical data as the token-based version" and that token-based access "may offer higher
-rate limits". Configure credentials if you hit the tokenless limit (Meta documents "1,000 requests every hour" without
-saying per what). The same endpoints are called either way; only the `access_token` parameter and the cache-key segment
-differ. Tokens are redacted from logs.
+### Using a Meta access token
+
+Nothing in this package needs a token. Meta opened the oEmbed endpoints to tokenless calls in June 2026 and states that
+they "currently return the same technical data as the token-based version". A token buys rate-limit headroom
+(Meta: "token-based access through App Review may offer higher rate limits"; the tokenless limit is documented as
+"1,000 requests every hour" without saying per what) and future-proofs a site if Meta narrows tokenless access again.
+
+1. In the [Meta App Dashboard](https://developers.facebook.com/apps/) create or open an app, add the **oEmbed Read**
+   product and complete its App Review. Note the **App ID** (Settings → Basic) and the **Client token**
+   (Settings → Advanced → Security).
+2. Put the two values into configuration. The package sends them as the app access token `APP_ID|CLIENT_TOKEN`, exactly
+   like Meta's WordPress plugin. If you already hold a user or page access token, set `AccessToken` instead; it is sent
+   verbatim and wins over the pair.
+
+```json
+{
+  "XperienceCommunityMetaEmbeds": {
+    "Credentials": { "AppId": "1234567890", "ClientToken": "abc123…" }
+  }
+}
+```
+
+Because this is standard ASP.NET Core configuration, keep the secret out of `appsettings.json`: use
+[user secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets) locally
+(`dotnet user-secrets set "XperienceCommunityMetaEmbeds:Credentials:ClientToken" "…"`), and environment variables
+(`XperienceCommunityMetaEmbeds__Credentials__ClientToken`) or a key vault in hosting. The same binding also works in code:
+
+```csharp
+builder.Services.AddXperienceCommunityMetaEmbeds(o => o.Credentials.AccessToken = builder.Configuration["Meta:Token"]);
+```
+
+What changes when credentials are present: every oEmbed call carries `access_token`; the same endpoints are called;
+tokenless and authenticated results are cached under different keys, so switching never serves a stale mix; the token is
+redacted from every log message and editor-facing text; a rejected token (Meta error code 190) shows editors "Meta
+rejected this URL as not embeddable" and logs a warning that names the credentials. The token is never stored in page
+content or in the CI repository, which is why it is not a widget property and why there is no admin UI for it in this
+version.
+
+The authenticated route has been exercised only against fakes; no Meta app was available when the package was built.
 
 ## Caching
 

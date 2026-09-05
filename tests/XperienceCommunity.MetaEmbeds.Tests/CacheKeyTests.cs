@@ -99,4 +99,30 @@ public class CacheKeyTests
 
         Assert.That(name.Split('|'), Has.Length.EqualTo(6));
     }
+
+    [Test]
+    public void ToCacheItemName_WithVariant_AppendsItAsASeventhSegment()
+    {
+        var plain = new EmbedCacheKey("instagram", CacheFormUrl, false, "v25.0").ToCacheItemName();
+        var variant = new EmbedCacheKey("instagram", CacheFormUrl, false, "v25.0", "HideCaption").ToCacheItemName();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(variant, Does.StartWith(plain + "|"));
+            Assert.That(variant.Split('|'), Has.Length.EqualTo(7));
+            Assert.That(variant, Does.EndWith("|hidecaption"), "variant is lower-cased");
+            Assert.That(variant, Is.Not.EqualTo(plain));
+        });
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void ToCacheItemName_BlankVariant_KeepsThePlainName(string? variant)
+    {
+        var plain = new EmbedCacheKey("instagram", CacheFormUrl, false, "v25.0").ToCacheItemName();
+        var withBlank = new EmbedCacheKey("instagram", CacheFormUrl, false, "v25.0", variant!).ToCacheItemName();
+
+        Assert.That(withBlank, Is.EqualTo(plain));
+    }
 }

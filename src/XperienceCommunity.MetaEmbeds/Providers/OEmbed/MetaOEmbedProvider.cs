@@ -103,21 +103,27 @@ public sealed class MetaOEmbedProvider : IEmbedProvider
         }
 
         var current = options.CurrentValue;
+        var parameters = OEmbedRequestParameters.For(endpoint, request.Parameters);
         var key = new EmbedCacheKey(
             endpoint.Key,
             urlMatcher.ToCacheForm(normalized),
             Authenticated: !current.Credentials.IsEmpty,
-            current.GraphApiVersion);
+            current.GraphApiVersion,
+            Variant: parameters.CacheVariant);
         var policy = EmbedCachePolicy.For(current, endpoint.Key);
 
-        return cache.GetOrAddAsync(key, ct => FetchAsync(endpoint, normalized, current, ct), policy, cancellationToken);
+        return cache.GetOrAddAsync(key, ct => FetchAsync(endpoint, normalized, current, parameters, ct), policy, cancellationToken);
     }
 
     /// <summary>One HTTP round trip to Meta plus sanitising. Only caller cancellation escapes as an exception.</summary>
-    internal async Task<EmbedResult> FetchAsync(MetaOEmbedEndpoint endpoint, Uri normalized, MetaEmbedsOptions current, CancellationToken cancellationToken)
+    internal Task<EmbedResult> FetchAsync(MetaOEmbedEndpoint endpoint, Uri normalized, MetaEmbedsOptions current, CancellationToken cancellationToken) =>
+        FetchAsync(endpoint, normalized, current, OEmbedRequestParameters.None, cancellationToken);
+
+    /// <summary>One HTTP round trip to Meta plus sanitising, with extra oEmbed parameters. Only caller cancellation escapes as an exception.</summary>
+    internal async Task<EmbedResult> FetchAsync(MetaOEmbedEndpoint endpoint, Uri normalized, MetaEmbedsOptions current, OEmbedRequestParameters parameters, CancellationToken cancellationToken)
     {
         var token = current.Credentials.ResolveAccessToken();
-        var requestUri = BuildRequestUri(endpoint, normalized, current, token);
+        var requestUri = BuildRequestUri(endpoint, normalized, current, token, parameters);
         var redactedUri = Redact(requestUri.AbsoluteUri, token);
 
         try
@@ -224,13 +230,14 @@ public sealed class MetaOEmbedProvider : IEmbedProvider
         }
     }
 
-    /// <summary><c>{endpoint}?url={escaped}[&amp;access_token={escaped}]</c>.</summary>
-    internal static Uri BuildRequestUri(MetaOEmbedEndpoint endpoint, Uri normalized, MetaEmbedsOptions current, string? token)
+    /// <summary><c>{endpoint}?url={escaped}[&amp;hidecaption=true][&amp;access_token={escaped}]</c>.</summary>
+    internal static Uri BuildRequestUri(MetaOEmbedEndpoint endpoint, Uri normalized, MetaEmbedsOptions current, string? token, OEmbedRequestParameters? parameters = null)
     {
         var endpointUri = endpoint.EndpointUri(current);
         var builder = new StringBuilder(endpointUri.GetLeftPart(UriPartial.Path));
         builder.Append(string.IsNullOrEmpty(endpointUri.Query) ? "?" : endpointUri.Query + "&");
         builder.Append("url=").Append(Uri.EscapeDataString(normalized.AbsoluteUri));
+        (parameters ?? OEmbedRequestParameters.None).AppendTo(builder);
         if (token is not null)
         {
             builder.Append("&access_token=").Append(Uri.EscapeDataString(token));

@@ -60,4 +60,40 @@
   <data name="xperiencecommunity.metaembeds.failure.internal" xml:space="preserve">
     <value>Embed failed; see the event log.</value>
   </data>
+  <data name="xperiencecommunity.metaembeds.properties.category.appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.layout.label" xml:space="preserve">
+    <value>Layout</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.layout.explanationText" xml:space="preserve">
+    <value>Natural keeps Meta's own width and left alignment. Centered keeps the width and centers the embed in the column. Fluid stretches Facebook posts to the column width; Instagram and Threads embeds are already fluid up to 658px.</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.layout.options.natural" xml:space="preserve">
+    <value>Natural</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.layout.options.centered" xml:space="preserve">
+    <value>Centered</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.layout.options.fluid" xml:space="preserve">
+    <value>Fluid</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.hideCaption.label" xml:space="preserve">
+    <value>Hide caption</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.hideCaption.explanationText" xml:space="preserve">
+    <value>Instagram only. Hides the post caption under the media. Ignored for Threads and Facebook.</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.theme.label" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.theme.explanationText" xml:space="preserve">
+    <value>Threads only. Light or dark styling of the embed. Ignored for Instagram and Facebook.</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.theme.options.light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="xperiencecommunity.metaembeds.properties.theme.options.dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
 </root>

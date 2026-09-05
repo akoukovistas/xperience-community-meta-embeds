@@ -23,3 +23,10 @@ All notable changes to this project are documented here. The format follows
 - English resources (`xperiencecommunity.metaembeds.*`) registered for both the `Builder` and `Server` localization
   targets.
 - README, usage guide, contributing guide, GitHub Actions CI (Ubuntu + Windows), issue templates, package icon and logo.
+- Appearance options in an expanded "Appearance" category of the widget dialog: **Layout** (natural / centered /
+  fluid), **Hide caption** (Instagram, `hidecaption=true`, cached as its own variant) and **Theme** (Threads,
+  `data-theme="dark"`). Stable CSS hooks on the wrapper (`meta-embed--{platform}`, `meta-embed--layout-{layout}`,
+  `meta-embed--theme-dark`, `meta-embed--no-caption`) and a starter stylesheet in the README.
+- `EmbedRequest.Parameters` (provider-specific request parameters) and an optional `Variant` segment on
+  `EmbedCacheKey`, so parameters that change Meta's response are cached separately.
+- README section on using a Meta access token: where to get one, how to keep it out of source, what changes when it is set.

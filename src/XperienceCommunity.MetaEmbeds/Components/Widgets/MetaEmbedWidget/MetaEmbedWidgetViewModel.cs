@@ -1,9 +1,11 @@
+using XperienceCommunity.MetaEmbeds.Rendering;
+
 namespace XperienceCommunity.MetaEmbeds.Widgets;
 
 /// <summary>Everything <c>_MetaEmbedWidget.cshtml</c> needs. The view has no logic that can throw.</summary>
 public sealed class MetaEmbedWidgetViewModel
 {
-    /// <summary>Sanitised embed markup, rendered raw. Empty when there is nothing to show.</summary>
+    /// <summary>Sanitised embed markup with the presentation applied, rendered raw. Empty when there is nothing to show.</summary>
     public string Html { get; init; } = string.Empty;
 
     /// <summary>
@@ -23,4 +25,13 @@ public sealed class MetaEmbedWidgetViewModel
 
     /// <summary>True when this widget instance renders the page's single <c>&lt;div id="fb-root"&gt;&lt;/div&gt;</c> (first Facebook embed in the request).</summary>
     public bool EmitFacebookRoot { get; init; }
+
+    /// <summary>The editor's appearance choices, normalised.</summary>
+    public EmbedPresentation Presentation { get; init; } = EmbedPresentation.Default;
+
+    /// <summary>Full class attribute of the wrapper, e.g. <c>meta-embed meta-embed--threads meta-embed--layout-centered meta-embed--theme-dark</c>.</summary>
+    public string CssClass { get; init; } = "meta-embed";
+
+    /// <summary>Inline style the layout needs (centered only), or null.</summary>
+    public string? WrapperStyle { get; init; }
 }

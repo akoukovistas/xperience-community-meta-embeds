@@ -128,11 +128,13 @@ public sealed class MetaEmbedWidget : ViewComponent
             cacheDependencies.CacheKeys = [MetaEmbedsConstants.CacheKeyAll];
         }
 
+        var presentation = EmbedPresentation.From(properties.Layout, properties.Theme, properties.HideCaption);
         var request = new EmbedRequest
         {
             SourceType = EmbedSourceTypes.Normalize(properties.SourceType),
             Input = properties.Url?.Trim() ?? string.Empty,
             Culture = viewModel?.Page?.LanguageName,
+            Parameters = presentation.HideCaption ? HideCaptionParameters : EmbedRequestParameters.None,
         };
 
         var cancellationToken = httpContext?.RequestAborted ?? CancellationToken.None;
@@ -153,10 +155,14 @@ public sealed class MetaEmbedWidget : ViewComponent
             });
         }
 
-        return View(ViewPath, BuildSuccessModel(result.Items, isEditContext));
+        return View(ViewPath, BuildSuccessModel(result.Items, isEditContext, presentation));
     }
 
-    private MetaEmbedWidgetViewModel BuildSuccessModel(IReadOnlyList<EmbedItem> items, bool isEditContext)
+    /// <summary>Request parameters sent when the editor ticked "Hide caption" (Instagram honours it, the others ignore it).</summary>
+    private static readonly IReadOnlyDictionary<string, string> HideCaptionParameters =
+        new Dictionary<string, string>(1) { [EmbedRequestParameters.HideCaption] = "true" };
+
+    private MetaEmbedWidgetViewModel BuildSuccessModel(IReadOnlyList<EmbedItem> items, bool isEditContext, EmbedPresentation presentation)
     {
         var endpointKey = items[0].EndpointKey ?? string.Empty;
         var isFacebook = endpointKey.StartsWith("facebook", StringComparison.OrdinalIgnoreCase);
@@ -168,7 +174,8 @@ public sealed class MetaEmbedWidget : ViewComponent
         foreach (var item in items)
         {
             var html = item.Html ?? string.Empty;
-            htmlParts.Add(isFacebook ? StripFacebookRoot(html) : html);
+            html = isFacebook ? StripFacebookRoot(html) : html;
+            htmlParts.Add(EmbedMarkupDecorator.Apply(html, item.EndpointKey, presentation));
 
             if (scriptMode == EmbedScriptMode.None)
             {
@@ -200,6 +207,9 @@ public sealed class MetaEmbedWidget : ViewComponent
             ScriptsToEmit = scriptsToEmit,
             EmitFacebookRoot = emitFacebookRoot,
             IsEditMode = isEditContext,
+            Presentation = presentation,
+            CssClass = presentation.CssClasses(endpointKey),
+            WrapperStyle = presentation.WrapperStyle,
         };
     }
 
