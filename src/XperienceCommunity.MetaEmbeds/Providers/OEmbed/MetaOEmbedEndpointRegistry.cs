@@ -20,15 +20,7 @@ public sealed class MetaOEmbedEndpointRegistry : IMetaOEmbedEndpointRegistry
     public MetaOEmbedEndpoint? Match(Uri url)
     {
         ArgumentNullException.ThrowIfNull(url);
-        foreach (var endpoint in Endpoints)
-        {
-            if (endpoint.Matches(url))
-            {
-                return endpoint;
-            }
-        }
-
-        return null;
+        return Endpoints.FirstOrDefault(endpoint => endpoint.Matches(url));
     }
 
     /// <inheritdoc />

@@ -109,5 +109,9 @@ public static class MetaEmbedsServiceCollectionExtensions
         return tag.All(c => char.IsAsciiLetterOrDigit(c) || c == '-') && tag.Length <= 35 ? tag : "en-US";
     }
 
-    private sealed class MetaEmbedsHttpClientMarker;
+    /// <summary>Registered once so repeated <c>TryAddMetaEmbedsServices</c> calls do not re-run <c>AddHttpClient</c>.</summary>
+    private sealed class MetaEmbedsHttpClientMarker
+    {
+        public string ClientName => MetaEmbedsConstants.HttpClientName;
+    }
 }

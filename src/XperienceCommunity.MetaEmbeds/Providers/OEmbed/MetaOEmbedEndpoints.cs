@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
 
+#pragma warning disable S1075 // Hard-coded URIs: this file is the table of Meta's fixed endpoint and SDK addresses.
+
 namespace XperienceCommunity.MetaEmbeds.Providers.OEmbed;
 
 /// <summary>
