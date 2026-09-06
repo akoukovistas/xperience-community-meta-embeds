@@ -1,0 +1,100 @@
+name: "Release: Publish to NuGet"
+
+# Publishes the package when a GitHub release is published. The release tag must be `v<version>` and match
+# <VersionPrefix> in Directory.Build.props (e.g. tag v1.0.0 for 1.0.0). Requires the repository secret NUGET_API_KEY,
+# an nuget.org API key scoped to "Push new packages and package versions" for the glob XperienceCommunity.MetaEmbeds*.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build and pack only, do not push to nuget.org"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: 1
+
+jobs:
+  publish:
+    name: Pack and publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Read version from Directory.Build.props
+        id: version
+        shell: bash
+        run: |
+          version=$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' Directory.Build.props)
+          suffix=$(sed -n 's:.*<VersionSuffix>\(.*\)</VersionSuffix>.*:\1:p' Directory.Build.props)
+          full="$version${suffix:+-$suffix}"
+          echo "version=$full" >> "$GITHUB_OUTPUT"
+          echo "Package version: $full"
+
+      - name: Check the release tag matches the package version
+        if: github.event_name == 'release'
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          expected="v${{ steps.version.outputs.version }}"
+          if [ "$tag" != "$expected" ]; then
+            echo "::error::Release tag '$tag' does not match package version '$expected'. Bump VersionPrefix in Directory.Build.props or re-tag."
+            exit 1
+          fi
+
+      - name: Restore (locked)
+        run: dotnet restore --locked-mode
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build --filter "TestCategory!=Live"
+
+      - name: Pack
+        run: dotnet pack src/XperienceCommunity.MetaEmbeds/XperienceCommunity.MetaEmbeds.csproj --configuration Release --no-build --output artifacts
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: artifacts/*nupkg
+
+      - name: Attach packages to the GitHub release
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" artifacts/*.nupkg artifacts/*.snupkg --clobber
+
+      - name: Push to nuget.org
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == false)
+        shell: bash
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::error::The NUGET_API_KEY repository secret is not set."
+            exit 1
+          fi
+          # The matching .snupkg in the same folder is pushed automatically with the .nupkg.
+          dotnet nuget push "artifacts/XperienceCommunity.MetaEmbeds.${{ steps.version.outputs.version }}.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate

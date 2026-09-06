@@ -5,6 +5,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-06
+
+First release. Built and verified against Xperience by Kentico 31.8.3.
+
 ### Added
 
 - Initial implementation: one "Meta embed" Page Builder widget covering Threads posts, Instagram posts/reels and

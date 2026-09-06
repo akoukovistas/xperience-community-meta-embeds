@@ -93,7 +93,7 @@ Add **Meta embed** to any Page Builder editable area, open **Configure widget**,
 apply. Everything else is optional: the **Appearance** category holds three design choices, and **Source type**
 (single option, *Single post*) sits in a collapsed **Advanced** category for forward compatibility.
 
-![The Meta embed properties dialog: Post URL on top, the Appearance category with Layout, Hide caption and Theme, and the collapsed Advanced category](images/widget-configuration.png)
+![The Meta embed properties dialog: Post URL on top, the Appearance category with Layout, Hide caption and Theme, and the collapsed Advanced category](https://raw.githubusercontent.com/akoukovistas/xperience-community-meta-embeds/main/images/widget-configuration.png)
 
 ### Appearance options
 

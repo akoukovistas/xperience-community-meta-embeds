@@ -82,8 +82,40 @@ stay on exactly the same version as `Kentico.Xperience.WebApp`.
    - two embeds of the same platform on one page load the SDK once (`Inline`), and once via `<meta-embeds-scripts />`
      (`TagHelper`);
    - widget output caching on plus `TagHelper` mode; `CacheHelper.TouchKey("metaembeds|all")` re-renders;
-   - the widget dialog shows **Post URL** on top and a collapsed **Advanced** category containing **Source type** with
-     the single option *Single post*, all labels localised (no raw `{$…$}` keys).
+   - the widget dialog shows **Post URL** on top, an expanded **Appearance** category (Layout, Hide caption, Theme) and
+     a collapsed **Advanced** category containing **Source type** with the single option *Single post*, all labels
+     localised (no raw `{$…$}` keys).
+
+## Releasing to nuget.org
+
+Releases are published by the `Release: Publish to NuGet` GitHub Actions workflow (`.github/workflows/release.yml`).
+The .NET SDK does the packing and pushing; the standalone `nuget.exe` is not used anywhere.
+
+One-time setup:
+
+1. Sign in to <https://www.nuget.org/> and create an API key under **API Keys**: scope *Push new packages and package
+   versions*, glob pattern `XperienceCommunity.MetaEmbeds*`, the shortest expiry you are comfortable renewing.
+2. Add it to the GitHub repository as the secret **`NUGET_API_KEY`** (Settings → Secrets and variables → Actions).
+
+Per release:
+
+1. Set `<VersionPrefix>` in `Directory.Build.props` (and `<VersionSuffix>` for pre-releases, e.g. `preview.1`).
+2. Move the **Unreleased** entries in `CHANGELOG.md` under a new `## [x.y.z] - yyyy-mm-dd` heading and update the
+   version matrix in the README if the Xperience floor changed.
+3. Commit, push, wait for CI to pass.
+4. Create a GitHub release with tag **`vx.y.z`** (the workflow refuses a tag that does not match the version). Publishing
+   the release restores in locked mode, builds, tests, packs, attaches the `.nupkg` and `.snupkg` to the release and
+   pushes both to nuget.org. Indexing on nuget.org takes a few minutes; the README badge updates after that.
+
+To rehearse without publishing, run the workflow manually from the Actions tab with **dry run** ticked; it builds and
+packs and uploads the package as a workflow artifact. Publishing by hand works too:
+
+```powershell
+dotnet pack src/XperienceCommunity.MetaEmbeds/XperienceCommunity.MetaEmbeds.csproj -c Release -o artifacts
+dotnet nuget push artifacts/XperienceCommunity.MetaEmbeds.<version>.nupkg --api-key <key> --source https://api.nuget.org/v3/index.json
+```
+
+A pushed version can never be replaced on nuget.org, only unlisted, so fix mistakes with a new patch version.
 
 ## Development workflow
 
