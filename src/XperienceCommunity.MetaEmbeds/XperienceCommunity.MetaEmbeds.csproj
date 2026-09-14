@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <PackageReference Include="Kentico.Xperience.WebApp" />
+    <PackageReference Include="AngleSharp" />
+    <PackageReference Include="AngleSharp.Css" />
     <PackageReference Include="HtmlSanitizer" />
   </ItemGroup>
 

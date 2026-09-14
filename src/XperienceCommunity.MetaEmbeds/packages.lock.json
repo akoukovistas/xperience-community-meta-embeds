@@ -2,6 +2,21 @@
   "version": 2,
   "dependencies": {
     "net8.0": {
+      "AngleSharp": {
+        "type": "Direct",
+        "requested": "[1.7.1, )",
+        "resolved": "1.7.1",
+        "contentHash": "QBblGpRB3SYD66Mls7fHyl1mWkP93n7ErWDWHc1vd9sPHhdlTkmUoY3CjgfjcWNxGF9m7xjNyztRfErXqoBKOA=="
+      },
+      "AngleSharp.Css": {
+        "type": "Direct",
+        "requested": "[1.0.1, )",
+        "resolved": "1.0.1",
+        "contentHash": "6S13xNHH+SUGPZd6EO1MhkuDbpEnFroUM6A8DZpLJHQnLRTvtBJb3Ydu65s618E4gWF9FSWmM5jhKk4RIfwT2A==",
+        "dependencies": {
+          "AngleSharp": "[1.5.0, 2.0.0)"
+        }
+      },
       "HtmlSanitizer": {
         "type": "Direct",
         "requested": "[9.2.995, )",
@@ -33,19 +48,6 @@
         "requested": "[10.33.0.1635, )",
         "resolved": "10.33.0.1635",
         "contentHash": "nOwgvMh7p64z62GTy2n4Ki51DVy4Q2ejxxfuclW6Y5u6Htk1i2RNRqxuONiZ/4aaBi8V6RwzuCcGTOFcoVoQOg=="
-      },
-      "AngleSharp": {
-        "type": "Transitive",
-        "resolved": "1.7.1",
-        "contentHash": "QBblGpRB3SYD66Mls7fHyl1mWkP93n7ErWDWHc1vd9sPHhdlTkmUoY3CjgfjcWNxGF9m7xjNyztRfErXqoBKOA=="
-      },
-      "AngleSharp.Css": {
-        "type": "Transitive",
-        "resolved": "1.0.1",
-        "contentHash": "6S13xNHH+SUGPZd6EO1MhkuDbpEnFroUM6A8DZpLJHQnLRTvtBJb3Ydu65s618E4gWF9FSWmM5jhKk4RIfwT2A==",
-        "dependencies": {
-          "AngleSharp": "[1.5.0, 2.0.0)"
-        }
       },
       "Azure.Core": {
         "type": "Transitive",
