@@ -5,6 +5,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `AngleSharp` (1.7.1) and `AngleSharp.Css` (1.0.1) are declared dependencies of the package instead of arriving
+  transitively through HtmlSanitizer; the sanitiser compiles against both. The test project declares `AngleSharp` for
+  the same reason. Same versions as before, so no resolved dependency changes.
+
 ## [1.0.0] - 2026-09-06
 
 First release. Built and verified against Xperience by Kentico 31.8.3.

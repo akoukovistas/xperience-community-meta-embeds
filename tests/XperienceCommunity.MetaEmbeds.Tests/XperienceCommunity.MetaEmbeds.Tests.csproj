@@ -19,6 +19,8 @@
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Kentico.Xperience.Core.Tests" />
+    <!-- SanitizerTests parses the sanitised markup with AngleSharp directly. -->
+    <PackageReference Include="AngleSharp" />
   </ItemGroup>
 
   <ItemGroup>
