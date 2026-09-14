@@ -29,7 +29,8 @@ hosts, and subject to Meta's Platform Terms and privacy policy. See the CSP sect
 [HtmlSanitizer](https://github.com/mganss/HtmlSanitizer) (`Ganss.Xss`, the same package Kentico.Xperience.WebApp
 already depends on) with one allowlist **profile** per platform. The endpoint definition names the profile
 (`MetaOEmbedEndpoint.SanitizerProfile`) and the CSS selector the sanitised markup must still satisfy
-(`ExpectedRootSelector`).
+(`ExpectedRootSelector`). The implementation also uses AngleSharp/AngleSharp.Css APIs directly for DOM post-rules
+(`ApplyPostRules`) and root-selector checks (`HasRoot`).
 
 Per call:
 
