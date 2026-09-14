@@ -1,0 +1,38 @@
+version: 2
+
+updates:
+  # NuGet packages are centrally managed in Directory.Packages.props; lock files are committed and CI restores with
+  # --locked-mode, so every bump must also regenerate them. Dependabot updates the lock files it can see.
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    groups:
+      # Kentico ships monthly refreshes; keep the WebApp and Core.Tests packages moving together.
+      xperience:
+        patterns:
+          - "Kentico.Xperience.*"
+      anglesharp:
+        patterns:
+          - "AngleSharp"
+          - "AngleSharp.*"
+      test-tooling:
+        patterns:
+          - "Microsoft.NET.Test.Sdk"
+          - "NUnit*"
+          - "NSubstitute"
+          - "coverlet.*"
+    ignore:
+      # Kentico.Xperience.Core.Tests is compiled against NUnit 3.x - see Directory.Packages.props.
+      - dependency-name: "NUnit"
+        versions: ["4.x"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"

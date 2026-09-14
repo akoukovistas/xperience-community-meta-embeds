@@ -180,7 +180,8 @@ public class OptionsBindingTests
             Assert.That(provider.GetRequiredService<IEmbedHtmlSanitizer>(), Is.InstanceOf<EmbedHtmlSanitizer>());
             Assert.That(provider.GetRequiredService<IMetaOEmbedEndpointRegistry>().Endpoints.Select(e => e.Key),
                 Is.EqualTo(new[] { "threads", "instagram", "facebook-post", "facebook-video" }));
-            Assert.That(provider.GetRequiredService<IEmbedResolver>(), Is.SameAs(provider.GetRequiredService<IEmbedResolver>()), "singleton");
+            var firstResolve = provider.GetRequiredService<IEmbedResolver>();
+            Assert.That(provider.GetRequiredService<IEmbedResolver>(), Is.SameAs(firstResolve), "singleton");
         });
     }
 

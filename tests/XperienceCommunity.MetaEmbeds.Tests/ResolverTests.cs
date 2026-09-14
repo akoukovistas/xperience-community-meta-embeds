@@ -218,7 +218,7 @@ public class ResolverTests
         var provider = new FakeProvider { ResolveFunc = (_, ct) => Task.FromCanceled<EmbedResult>(ct) };
         var (resolver, logger, _) = Build(provider);
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         var result = await resolver.ResolveAsync(new EmbedRequest { SourceType = "post", Input = Url }, cts.Token);
 
@@ -306,16 +306,6 @@ public class ResolverTests
         return (new EmbedResolver(providers, logger, clock), logger, clock);
     }
 
-    private static EmbedItem Item(EmbedRequest request) => new()
-    {
-        EndpointKey = "instagram",
-        ProviderName = "Instagram",
-        Html = "<blockquote class=\"instagram-media\"></blockquote>",
-        Type = "rich",
-        SourceUrl = Uri.TryCreate(request.Input, UriKind.Absolute, out var uri) ? uri : new Uri(Url),
-        RequiredScripts = [new Uri("https://www.instagram.com/embed.js")],
-    };
-
     private sealed class FakeProvider : IEmbedProvider
     {
         public string Name { get; init; } = "fake";
@@ -334,6 +324,16 @@ public class ResolverTests
             Received.Add(request);
             return ResolveFunc(request, cancellationToken);
         }
+
+        private static EmbedItem Item(EmbedRequest request) => new()
+        {
+            EndpointKey = "instagram",
+            ProviderName = "Instagram",
+            Html = "<blockquote class=\"instagram-media\"></blockquote>",
+            Type = "rich",
+            SourceUrl = Uri.TryCreate(request.Input, UriKind.Absolute, out var uri) ? uri : new Uri(Url),
+            RequiredScripts = [new Uri("https://www.instagram.com/embed.js")],
+        };
     }
 
     private sealed class ManualClock : TimeProvider
