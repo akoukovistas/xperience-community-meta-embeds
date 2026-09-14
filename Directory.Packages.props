@@ -10,6 +10,12 @@
     <PackageVersion Include="Kentico.Xperience.Core.Tests" Version="31.8.4" />
   </ItemGroup>
   <ItemGroup Label="Runtime">
+    <!--
+      The sanitiser compiles against AngleSharp, so it is declared rather than relied on transitively. Keep both at the
+      versions Kentico.Xperience.Core and HtmlSanitizer already resolve: these become minimum-version dependencies of
+      the published package, so raising them would force every consuming site above the AngleSharp that Xperience
+      ships and tests with, for no gain to us. Bump when Kentico bumps.
+    -->
     <PackageVersion Include="AngleSharp" Version="1.7.1" />
     <PackageVersion Include="AngleSharp.Css" Version="1.0.1" />
     <!-- Match the HtmlSanitizer version Kentico.Xperience.WebApp already depends on, so nothing new is pulled
@@ -20,11 +26,11 @@
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.34.0.3385" />
   </ItemGroup>
   <ItemGroup Label="Tests">
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
     <!-- Kentico.Xperience.Core.Tests is compiled against NUnit 3.x - do not move to 4.x. -->
     <PackageVersion Include="NUnit" Version="3.14.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.3.0" />
-    <PackageVersion Include="NUnit.Analyzers" Version="4.14.0" />
+    <PackageVersion Include="NUnit.Analyzers" Version="4.15.0" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
   </ItemGroup>

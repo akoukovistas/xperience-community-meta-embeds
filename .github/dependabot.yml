@@ -26,9 +26,20 @@ updates:
           - "NSubstitute"
           - "coverlet.*"
     ignore:
-      # Kentico.Xperience.Core.Tests is compiled against NUnit 3.x - see Directory.Packages.props.
+      # Kentico.Xperience.Core.Tests is compiled against NUnit 3.x - see Directory.Packages.props. Expressed as an
+      # update-type rather than a version range: "versions: [4.x]" was proposed and merged straight past by NUnit.
       - dependency-name: "NUnit"
-        versions: ["4.x"]
+        update-types: ["version-update:semver-major"]
+      # AngleSharp, AngleSharp.Css and HtmlSanitizer are deliberately held at the versions Kentico and HtmlSanitizer
+      # already resolve, because they are minimum-version dependencies of the published package - raising them forces
+      # every consuming site to follow. Patch updates are still proposed; anything larger is a manual decision taken
+      # when the Kentico packages move. See the comments in Directory.Packages.props.
+      - dependency-name: "AngleSharp"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "AngleSharp.Css"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "HtmlSanitizer"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
