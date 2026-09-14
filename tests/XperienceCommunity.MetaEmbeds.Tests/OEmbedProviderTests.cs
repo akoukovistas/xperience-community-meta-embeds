@@ -227,8 +227,24 @@ public class OEmbedProviderTests
 
         await h.ResolveAsync("https://www.instagram.com/p/fA9uwTtkSN/?igsh=a&hl=en");
 
+        // The query is dropped: it is not part of the cache key, so sending it would make two requests share one entry.
         var query = h.Handler.Requests.Single().RequestUri!.Query;
-        Assert.That(query, Is.EqualTo("?url=https%3A%2F%2Fwww.instagram.com%2Fp%2FfA9uwTtkSN%2F%3Figsh%3Da%26hl%3Den"));
+        Assert.That(query, Is.EqualTo("?url=https%3A%2F%2Fwww.instagram.com%2Fp%2FfA9uwTtkSN%2F"));
+    }
+
+    [Test]
+    public async Task Resolve_UrlsDifferingOnlyInQuery_ShareOneCacheEntryAndOneRequest()
+    {
+        var h = new Harness();
+        h.Handler.RespondWithJson(HttpStatusCode.OK, TestFixtures.ReadJson(TestFixtures.InstagramPost));
+
+        await h.ResolveAsync("https://www.instagram.com/p/fA9uwTtkSN/?hl=de");
+        await h.ResolveAsync("https://www.instagram.com/p/fA9uwTtkSN/?hl=en");
+
+        Assert.That(
+            h.Handler.Requests.Select(r => r.RequestUri!.Query).Distinct().Count(),
+            Is.EqualTo(1),
+            "the cache key ignores the query, so the request must too");
     }
 
     [Test]
@@ -441,18 +457,36 @@ public class OEmbedProviderTests
         Assert.That(entry.Id.Name, Is.EqualTo("METAEMBEDS_REJECTED"));
     }
 
-    [Test]
-    public async Task Resolve_ProfileUrl_IsAcceptedThenRejectedByMeta()
+    [TestCase("https://www.instagram.com/zuck/")]
+    [TestCase("https://instagram.com/zuck")]
+    [TestCase("https://www.instagram.com/some.user/?utm_source=share")]
+    public async Task Resolve_ProfileUrl_IsRejectedWithoutCallingMeta(string url)
     {
-        // Parity with Meta's WordPress plugin: the pattern accepts profile URLs, Meta's endpoint rejects them today.
+        // Meta answers every profile URL with 400 / 2207047, so spending a request from the 1,000/hour quota on one -
+        // and caching the failure for an hour - buys nothing over saying so immediately.
         var h = new Harness();
-        h.Handler.RespondWithJson(HttpStatusCode.BadRequest, TestFixtures.ReadJson(TestFixtures.ErrorInvalidUrl));
 
-        var result = await h.ResolveAsync("https://www.instagram.com/zuck/");
+        var result = await h.ResolveAsync(url);
 
-        Assert.That(result.Failure?.Kind, Is.EqualTo(EmbedFailureKind.RejectedByProvider));
-        Assert.That(result.Failure!.ProviderSubcode, Is.EqualTo(2207047));
-        Assert.That(h.Handler.Requests.Single().RequestUri!.AbsolutePath, Does.EndWith("/instagram_oembed"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Failure?.Kind, Is.EqualTo(EmbedFailureKind.UnsupportedInput));
+            Assert.That(result.Failure!.EditorMessage, Is.EqualTo("xperiencecommunity.metaembeds.failure.instagramprofile"));
+            Assert.That(h.Handler.Requests, Is.Empty, "no request to Meta");
+        });
+    }
+
+    [Test]
+    public void ProfileUrls_AreTheOnlyShapeWithASpecificExplanation()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(MetaOEmbedEndpoints.ExplainUnsupported(new Uri("https://www.instagram.com/zuck/")), Is.Not.Null);
+            Assert.That(MetaOEmbedEndpoints.ExplainUnsupported(new Uri("https://www.instagram.com/p/fA9uwTtkSN/")), Is.Null, "a post is supported");
+            Assert.That(MetaOEmbedEndpoints.ExplainUnsupported(new Uri("https://www.instagram.com/stories/zuck/1")), Is.Null);
+            Assert.That(MetaOEmbedEndpoints.ExplainUnsupported(new Uri("https://example.com/zuck")), Is.Null);
+            Assert.That(MetaOEmbedEndpoints.ExplainUnsupported(null), Is.Null);
+        });
     }
 
     [Test]

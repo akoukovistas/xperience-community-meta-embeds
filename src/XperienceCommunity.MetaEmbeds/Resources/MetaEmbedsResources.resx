@@ -45,6 +45,9 @@
   <data name="xperiencecommunity.metaembeds.failure.unsupportedinput" xml:space="preserve">
     <value>That URL isn't a supported Threads, Instagram or Facebook post link. Supported: instagram.com/p/… or /reel/…, threads.com/@user/post/… or /t/…, facebook.com/user/posts/… or /reel/…</value>
   </data>
+  <data name="xperiencecommunity.metaembeds.failure.instagramprofile" xml:space="preserve">
+    <value>Instagram profile links can't be embedded. Paste a link to a single post (instagram.com/p/…) or reel (instagram.com/reel/…) instead.</value>
+  </data>
   <data name="xperiencecommunity.metaembeds.failure.notfound" xml:space="preserve">
     <value>Meta can't embed this post. It may be private, deleted, or not embeddable.</value>
   </data>

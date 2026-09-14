@@ -305,6 +305,31 @@ public class MetaEmbedWidgetTests
     }
 
     [Test]
+    public async Task Failure_WithEditorMessageNamingAResourceKey_IsLocalised()
+    {
+        // How a provider says something more specific than the generic message for the failure kind without
+        // hardcoding English - see MetaOEmbedEndpoints.ExplainUnsupported.
+        const string key = "xperiencecommunity.metaembeds.failure.instagramprofile";
+        var failure = new EmbedFailure { Kind = EmbedFailureKind.UnsupportedInput, EditorMessage = key };
+        var localization = Localization();
+        var widget = CreateWidget(ResolverReturning(EmbedResult.Failed(failure)), SharedRegistry(new DefaultHttpContext()), edit: true, localization: localization);
+
+        var model = ViewModelOf(await widget.InvokeAsync(Model()));
+
+        Assert.That(model.EditorMessage, Is.EqualTo("LOC:" + key));
+        localization.Received(1).GetString(key, Arg.Any<string>(), Arg.Any<bool>());
+    }
+
+    [Test]
+    public void Resources_ContainTheInstagramProfileMessage()
+    {
+        var text = MetaEmbedsResources.ResourceManager.GetString(
+            "xperiencecommunity.metaembeds.failure.instagramprofile", CultureInfo.InvariantCulture);
+
+        Assert.That(text, Does.Contain("instagram.com/p/"));
+    }
+
+    [Test]
     public async Task ResolverThrows_ReturnsEmptyContent_InEveryMode([Values(true, false)] bool edit)
     {
         var resolver = Substitute.For<IEmbedResolver>();

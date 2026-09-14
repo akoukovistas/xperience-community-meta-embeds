@@ -41,10 +41,13 @@ Supported URL shapes (the host and path are checked server-side before anything 
 | Facebook  | `facebook.com/{user}/posts/{id}`                                         | Facebook post card                  |
 | Facebook  | `facebook.com/reel/{id}`                                                 | Facebook video player               |
 
-`http://`, missing `www.`, trailing slashes and query strings such as `?igsh=…` or `?hl=en` are all fine. Instagram
-profile URLs (`instagram.com/{user}`) are accepted by the URL check for parity with Meta's WordPress plugin, but Meta's
-tokenless endpoint rejected every profile URL tested on 2026-09-04, so editors see "Meta rejected this URL as not
-embeddable" and the live site renders nothing.
+`http://`, missing `www.`, trailing slashes and query strings such as `?igsh=…` or `?hl=en` are all fine - the query is
+dropped before the URL is sent to Meta, so it never splits the cache and share-tracking parameters are not forwarded.
+
+Instagram profile URLs (`instagram.com/{user}`) are rejected up front: Meta's tokenless endpoint answered every profile
+URL tested on 2026-09-04 with HTTP 400 / subcode 2207047, so there is nothing to gain from the round trip. Editors see
+"Instagram profile links can't be embedded. Paste a link to a single post … or reel … instead." and the live site
+renders nothing.
 
 The **Appearance** category (expanded by default) holds the three design choices Meta's embeds actually support:
 

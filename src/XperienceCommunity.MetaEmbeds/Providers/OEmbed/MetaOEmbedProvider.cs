@@ -102,9 +102,12 @@ public sealed class MetaOEmbedProvider : IEmbedProvider
         var endpoint = endpoints.Match(normalized);
         if (endpoint is null)
         {
-            return Task.FromResult(EmbedResult.Failed(
-                EmbedFailureKind.UnsupportedInput,
-                $"No oEmbed endpoint accepts URLs on host '{normalized.Host}' with this path shape."));
+            return Task.FromResult(EmbedResult.Failed(new EmbedFailure
+            {
+                Kind = EmbedFailureKind.UnsupportedInput,
+                ProviderMessage = $"No oEmbed endpoint accepts URLs on host '{normalized.Host}' with this path shape.",
+                EditorMessage = MetaOEmbedEndpoints.ExplainUnsupported(normalized),
+            }));
         }
 
         var current = options.CurrentValue;
@@ -269,7 +272,10 @@ public sealed class MetaOEmbedProvider : IEmbedProvider
         var endpointUri = endpoint.EndpointUri(current);
         var builder = new StringBuilder(endpointUri.GetLeftPart(UriPartial.Path));
         builder.Append(string.IsNullOrEmpty(endpointUri.Query) ? "?" : endpointUri.Query + "&");
-        builder.Append("url=").Append(Uri.EscapeDataString(normalized.AbsoluteUri));
+        // The cache key is built from the path alone, so the request is too: otherwise ...?hl=de and ...?hl=en are two
+        // different requests to Meta sharing one cache entry. Every supported shape is identified by its path, so
+        // nothing is lost - and the editor's share-tracking parameters (?igsh=..., ?utm_source=...) stop being forwarded.
+        builder.Append("url=").Append(Uri.EscapeDataString(normalized.GetLeftPart(UriPartial.Path)));
         (parameters ?? OEmbedRequestParameters.None).AppendTo(builder);
         if (token is not null)
         {

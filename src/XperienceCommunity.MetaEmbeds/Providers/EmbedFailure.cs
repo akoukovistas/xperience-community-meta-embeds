@@ -8,7 +8,9 @@ public sealed class EmbedFailure
 
     /// <summary>
     /// Optional override of the message shown to editors in Page Builder. When null (the usual case) the widget shows its
-    /// localised default message for <see cref="Kind"/>. Must never contain raw provider text.
+    /// localised default message for <see cref="Kind"/>. A value starting with
+    /// <see cref="MetaEmbedsConstants.ResourcePrefix"/> is treated as a resource key and localised; anything else is
+    /// shown verbatim. Must never contain raw provider text.
     /// </summary>
     public string? EditorMessage { get; init; }
 

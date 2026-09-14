@@ -30,9 +30,8 @@ public static class MetaOEmbedEndpoints
         SanitizerProfile: "threads");
 
     /// <summary>
-    /// Instagram posts and reels (<c>/p/{code}</c>, <c>/reel/{code}</c>) plus profile URLs. Profiles are accepted for
-    /// parity with Meta's plugin, but the tokenless endpoint currently rejects them (HTTP 400, subcode 2207047), which
-    /// surfaces as <see cref="EmbedFailureKind.RejectedByProvider"/>.
+    /// Instagram posts and reels: <c>/p/{code}</c> and <c>/reel/{code}</c>. Profile URLs are deliberately not matched -
+    /// see <see cref="InstagramProfile"/>.
     /// </summary>
     public static MetaOEmbedEndpoint Instagram { get; } = new(
         Key: "instagram",
@@ -40,7 +39,6 @@ public static class MetaOEmbedEndpoints
         UrlPatterns:
         [
             Pattern(@"^https?://(www\.)?instagram\.com/(p|reel)/[A-Za-z0-9_-]+/?(\?.*)?$"),
-            Pattern(@"^https?://(www\.)?instagram\.com/(?!stories/|explore/|accounts/|direct/|tv/|about/|legal/|developer/|api/|static/|nametag/|directory/)([A-Za-z0-9._]{1,30})/?(\?.*)?$"),
         ],
         EndpointUri: o => new Uri($"https://graph.facebook.com/{o.EffectiveGraphApiVersion}/instagram_oembed"),
         SdkScriptUri: _ => new Uri("https://www.instagram.com/embed.js"),
@@ -72,6 +70,24 @@ public static class MetaOEmbedEndpoints
         SdkScriptUri: FacebookSdk,
         ExpectedRootSelector: "div.fb-video",
         SanitizerProfile: "facebook");
+
+    /// <summary>
+    /// Single-segment <c>instagram.com/{user}</c> URLs. Meta's WordPress plugin lists these as supported, but the
+    /// tokenless endpoint answers every one of them with HTTP 400 / subcode 2207047. Matching them would spend a
+    /// request from the 1,000/hour quota and cache the failure for an hour, so they are rejected up front instead -
+    /// <see cref="ExplainUnsupported"/> turns them into a message that says what to paste instead.
+    /// </summary>
+    public static Regex InstagramProfile { get; } = Pattern(
+        @"^https?://(www\.)?instagram\.com/(?!p/|reel/|reels/|stories/|explore/|accounts/|direct/|tv/|about/|legal/|developer/|api/|static/|nametag/|directory/)([A-Za-z0-9._]{1,30})/?(\?.*)?$");
+
+    /// <summary>
+    /// Resource key of a specific editor message for a URL shape that is recognised but known not to be embeddable,
+    /// or null when there is nothing more helpful to say than the generic "unsupported link" message.
+    /// </summary>
+    public static string? ExplainUnsupported(Uri? url) =>
+        url is not null && InstagramProfile.IsMatch(url.AbsoluteUri)
+            ? MetaEmbedsConstants.ResourcePrefix + ".failure.instagramprofile"
+            : null;
 
     /// <summary>Default match order: Threads, Instagram, Facebook post, Facebook video.</summary>
     public static IReadOnlyList<MetaOEmbedEndpoint> Default { get; } = [Threads, Instagram, FacebookPost, FacebookVideo];

@@ -215,12 +215,19 @@ public sealed class MetaEmbedWidget : ViewComponent
 
     private string ResolveEditorMessage(EmbedFailure failure)
     {
+        // A provider may name a resource key instead of a literal, so a more specific message stays localisable.
         if (!string.IsNullOrWhiteSpace(failure.EditorMessage))
         {
-            return failure.EditorMessage;
+            return failure.EditorMessage.StartsWith(MetaEmbedsConstants.ResourcePrefix, StringComparison.Ordinal)
+                ? Localize(failure.EditorMessage)
+                : failure.EditorMessage;
         }
 
-        var key = MetaEmbedsResources.FailureKey(failure.Kind);
+        return Localize(MetaEmbedsResources.FailureKey(failure.Kind));
+    }
+
+    private string Localize(string key)
+    {
         var text = localization.GetString(key);
         return string.IsNullOrWhiteSpace(text) ? key : text;
     }

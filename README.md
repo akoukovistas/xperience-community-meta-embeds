@@ -50,12 +50,14 @@ The scope is deliberately identical to Meta's official WordPress plugin ([`faceb
 | Facebook  | `facebook.com/{user}/posts/{id}` (post)                                    | `https://graph.facebook.com/{GraphApiVersion}/oembed_post`    | `https://connect.facebook.net/{FacebookSdkLocale}/sdk.js#xfbml=1&version={GraphApiVersion}` |
 | Facebook  | `facebook.com/reel/{id}` (video)                                           | `https://graph.facebook.com/{GraphApiVersion}/oembed_video`   | same as above                                                         |
 
-`http://`, missing `www.`, trailing slashes and query strings (`?igsh=…`, `?hl=en`) are accepted and normalised.
-The URL an editor types is validated against these shapes before any network call and is only ever sent to Meta as a
-query parameter; it is never fetched.
+`http://`, missing `www.`, trailing slashes and query strings (`?igsh=…`, `?hl=en`) are accepted; the query is then
+dropped, so every spelling of one post is a single request and a single cache entry, and editors' share-tracking
+parameters are not forwarded to Meta. The URL an editor types is validated against these shapes before any network call
+and is only ever sent to Meta as a query parameter; it is never fetched.
 
-Instagram profile URLs (`instagram.com/{user}`) are listed as supported by Meta and accepted by the URL check, but
-testing returns HTTP 400; editors see "Meta rejected this URL as not embeddable".
+Instagram profile URLs (`instagram.com/{user}`) are **not** accepted. Meta's tokenless endpoint answers every one of
+them with HTTP 400 / subcode 2207047, so the widget rejects them without spending a request and tells the editor to
+paste a post or reel link instead.
 
 ## Library version matrix
 
@@ -145,7 +147,8 @@ Page Builder drag and click events, and any problem is shown as a message inside
 | Not a valid absolute URL                         | That isn't a valid web address. Paste the full https:// link to the post.                | nothing   |
 | Not a supported Threads / Instagram / Facebook shape | That URL isn't a supported Threads, Instagram or Facebook post link. Supported: …     | nothing   |
 | Meta: media not found, private, not embeddable   | Meta can't embed this post. It may be private, deleted, or not embeddable.               | nothing   |
-| Meta: URL rejected (incl. Instagram profiles)    | Meta rejected this URL as not embeddable.                                                | nothing   |
+| Instagram profile URL                            | Instagram profile links can't be embedded. Paste a link to a single post … or reel …     | nothing   |
+| Meta: URL rejected                               | Meta rejected this URL as not embeddable.                                                | nothing   |
 | Network error, timeout, 429, 5xx, bad JSON       | Couldn't reach Meta right now; the embed will appear once the service responds.          | nothing   |
 | Sanitiser removed the expected root element      | Meta returned markup this widget doesn't recognise. Update the package or report it.      | nothing   |
 | Any unexpected exception                         | Embed failed; see the event log.                                                         | nothing   |
@@ -234,7 +237,8 @@ Two layers:
 
 1. **oEmbed response cache** (`IEmbedResultCache`, default over `CMS.Helpers.IProgressiveCache`). Key:
    `metaembeds|oembed|{endpoint}|{graphVersion}|{anon|auth}|{sha256(normalisedUrl)}`, where the URL is normalised
-   (lower-case host, no `www.`, no query or fragment) so `?igsh=…` variants of one post share an entry. Sanitised HTML
+   (lower-case host, no `www.`, no query or fragment) so `?igsh=…` variants of one post share an entry - and the
+   request to Meta drops the query too, so one cache entry always corresponds to one request. Sanitised HTML
    is what gets cached; raw Meta markup never is. Durations per the table above; progressive caching means concurrent
    first renders of one URL make a single HTTP call. Responses are cached in edit and preview mode too, so every editor
    refresh does not cost a Meta call.
@@ -365,7 +369,8 @@ Last verified against the live API on **2026-09-04**, from a residential connect
   `type` and `provider_name` and ignores unknown members.
 - `graph.instagram.com/instagram_oembed` needs a token (400, code 190); the legacy `api.instagram.com/oembed` returns an
   HTML page. Neither is used.
-- Instagram profile URLs return 400 / subcode 2207047 (see above). `/reels/{code}` (plural) is rejected by Meta;
+- Instagram profile URLs return 400 / subcode 2207047, which is why the matcher no longer accepts them. `/reels/{code}`
+  (plural) is rejected by Meta;
   `/p/`, `/reel/`, `instagr.am`, `http://` and `?igsh=` variants are accepted.
 - Facebook responses embed an SDK tag whose locale follows `Accept-Language` and whose version (`v26.0`) is higher than
   the requested `v25.0`; the package therefore never echoes Meta's tag.
