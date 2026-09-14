@@ -1032,7 +1032,7 @@
           "AngleSharp": "[1.7.1, )",
           "AngleSharp.Css": "[1.0.1, )",
           "HtmlSanitizer": "[9.2.995, )",
-          "Kentico.Xperience.WebApp": "[31.8.3, )"
+          "Kentico.Xperience.WebApp": "[31.8.4, )"
         }
       },
       "AngleSharp.Css": {
@@ -1056,15 +1056,15 @@
       },
       "Kentico.Xperience.WebApp": {
         "type": "CentralTransitive",
-        "requested": "[31.8.3, )",
-        "resolved": "31.8.3",
-        "contentHash": "CZTiVm2++DrDpYzvVfKaBSP3FuiWhDKlNacvm2nNK6VHZYUfBLco0WiqKP0Xt2wh7zecwJd7SLPBr7oZ9U1KHQ==",
+        "requested": "[31.8.4, )",
+        "resolved": "31.8.4",
+        "contentHash": "/1EdWquA47RUpH4N7hyiDH5V8DMKVwmBdtoy7bVf/t8ZljSu4ZTOmzt/RPo/GcyR+4IDB2vcR8voDVioSs+85w==",
         "dependencies": {
           "CommandLineParser": "2.9.1",
           "HotChocolate.AspNetCore": "15.1.17",
           "HotChocolate.Data": "15.1.17",
           "HtmlSanitizer": "9.2.995",
-          "Kentico.Xperience.Core": "[31.8.3]",
+          "Kentico.Xperience.Core": "[31.8.4]",
           "Microsoft.AspNetCore.Components": "8.0.29",
           "Microsoft.Extensions.Caching.Memory": "9.0.18",
           "Microsoft.Extensions.FileProviders.Embedded": "8.0.29"
