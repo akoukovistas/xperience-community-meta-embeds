@@ -22,7 +22,7 @@ jobs:
       DOTNET_NOLOGO: 1
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # The library targets net8.0; the .slnx solution and global.json (rollForward latestMajor) need a 10.x SDK.
       - name: Setup .NET
