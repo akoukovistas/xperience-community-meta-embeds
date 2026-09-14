@@ -1,7 +1,8 @@
 # Usage guide
 
 This guide is for developers integrating the package and for the people who train editors. The [README](../README.md)
-has the overview, the configuration reference and the caching details; this page walks through day-to-day use.
+has the overview and the [configuration reference](Configuration.md) has every option; this page walks through
+day-to-day use.
 
 ## 1. Install
 
@@ -57,12 +58,41 @@ The **Appearance** category (expanded by default) holds the three design choices
 | **Hide caption** | off (default), on                        | Instagram only: the caption under the media is left out (`hidecaption=true` on the oEmbed call). Ignored by the other platforms.                             |
 | **Theme**        | *Light* (default), *Dark*                | Threads only: dark styling of the Threads card (`data-theme="dark"`). Ignored by the other platforms.                                                        |
 
-Every embed is wrapped in `<div class="meta-embed meta-embed--{platform} meta-embed--layout-{layout}">`, with
-`meta-embed--theme-dark` and `meta-embed--no-caption` added when those options are on. The package ships no CSS; style
-those classes in the site stylesheet (the README has a starter snippet).
+Everything inside the wrapper is Meta's own markup and, once their SDK runs, Meta's own iframe. The package ships no
+CSS and does not fight Meta's styling; the three options above are the parameters Meta actually exposes. Anything beyond
+them - spacing, background, borders, responsive breakpoints - belongs in the site's stylesheet, using the hooks below.
 
 The **Advanced** category (collapsed by default) holds **Source type**, which has a single option, *Single post*, in
 this version. Leave it alone; it exists so a future release can add other source types without a migration.
+
+### CSS hooks
+
+Every embed is wrapped in a `div` with predictable, prefixed classes:
+
+| Class                                                                                                     | When                                                                                             |
+|-----------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `meta-embed`                                                                                              | always                                                                                           |
+| `meta-embed--instagram`, `meta-embed--threads`, `meta-embed--facebook-post`, `meta-embed--facebook-video` | per platform                                                                                     |
+| `meta-embed--layout-natural`, `meta-embed--layout-centered`, `meta-embed--layout-fluid`                   | the chosen layout                                                                                |
+| `meta-embed--theme-dark`                                                                                  | *Theme* is *Dark* (on every platform, so a site can frame dark Instagram/Facebook embeds itself) |
+| `meta-embed--no-caption`                                                                                  | *Hide caption* is on                                                                             |
+| `meta-embed--message`                                                                                     | the editor-only message box (never on the live site)                                             |
+
+A starting point for a site stylesheet:
+
+```css
+/* Space embeds like other blocks and stop very tall reels from dominating a column. */
+.meta-embed { margin: 2rem 0; }
+.meta-embed--facebook-video iframe { max-height: 80vh; }
+
+/* A dark page: give Instagram and Facebook embeds (which have no dark mode) a matching frame. */
+.meta-embed--theme-dark { background: #111; padding: 1rem; border-radius: 12px; }
+
+/* Cap the width of fluid Facebook posts on very wide columns. */
+.meta-embed--facebook-post.meta-embed--layout-fluid { max-width: 750px; }
+```
+
+The classes are stable API: they are covered by tests, and any change to them is a breaking change in the changelog.
 
 ## 3. What editors see when something is wrong
 

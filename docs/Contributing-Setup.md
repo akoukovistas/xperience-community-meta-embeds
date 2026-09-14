@@ -52,8 +52,9 @@ Do not add them to CI: they depend on the network, on Meta's availability and on
 ### Fixtures
 
 `tests/XperienceCommunity.MetaEmbeds.Tests/Fixtures/*.json` are oEmbed responses captured on 2026-09-04 (tokenless,
-`Accept-Language: en-US`). When you re-capture them, keep the capture date in `TestFixtures.cs` and in the README's
-verification notes in sync, and re-run the sanitiser snapshot tests.
+`Accept-Language: en-US`). When you re-capture them, add a dated section to
+[Verification notes](Verification-Notes.md), keep the capture date in `TestFixtures.cs` in sync, and re-run the
+sanitiser snapshot tests.
 
 ### Dependencies
 

@@ -209,6 +209,24 @@ sure the markup is what the endpoint expects, and remember that whatever you ret
 `Sanitize` must be safe to call concurrently; the default implementation pools its HtmlSanitizer instances per profile
 so no per-call state is shared.
 
+## Privacy and Meta terms
+
+This package calls Meta's oEmbed API endpoints. When a Threads, Instagram or Facebook URL is embedded:
+
+- The web server makes a server-side request to `graph.threads.com/oembed` (Threads),
+  `graph.facebook.com/{version}/instagram_oembed` (Instagram), `graph.facebook.com/{version}/oembed_post` (Facebook
+  posts) or `graph.facebook.com/{version}/oembed_video` (Facebook videos) to fetch the embed HTML. The only data sent is
+  the post URL the editor entered, with its query string removed (and, if configured, your access token).
+- The rendered page loads `www.threads.com/embed.js`, `www.instagram.com/embed.js` or
+  `connect.facebook.net/{locale}/sdk.js` in the visitor's browser to turn the placeholder into the embed.
+- No visitor or user data is collected or stored by this package. The cache holds sanitised embed markup keyed by a
+  hash of the post URL.
+- Frontend embed rendering is subject to [Meta's Privacy Policy](https://www.facebook.com/privacy/policy/).
+- Use of Meta's endpoints and SDKs is subject to the [Meta Platform Terms](https://developers.facebook.com/terms/dfc_platform_terms/),
+  [Developer Policies](https://developers.facebook.com/devpolicy/) and
+  [Meta's Community Standards](https://transparency.meta.com/policies/community-standards/), together with all other
+  applicable terms and policies. Consent management for the third-party scripts is the site's responsibility.
+
 ## Reporting a problem
 
 This is a community package. If you find markup that passes the sanitiser and should not, open a private security
