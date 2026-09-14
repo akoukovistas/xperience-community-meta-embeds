@@ -217,6 +217,45 @@ public class OptionsBindingTests
         Assert.That(provider.GetRequiredService<IEmbedUrlMatcher>(), Is.SameAs(custom));
     }
 
+    [Test]
+    public void InCodeConfiguration_BeatsTheSectionRegisteredAfterIt()
+    {
+        // The order the module produces: a consumer configures in code, then AddKentico() runs and the module binds
+        // the host configuration. Before the options callback became a PostConfigure, the section won here.
+        var services = new ServiceCollection();
+        services.AddSingleton(Substitute.For<IProgressiveCache>());
+        services.AddXperienceCommunityMetaEmbeds(o =>
+        {
+            o.ScriptMode = EmbedScriptMode.None;
+            o.GraphApiVersion = "v27.0";
+        });
+        services.AddXperienceCommunityMetaEmbeds(BuildConfiguration(PlanJson));
+        using var provider = services.BuildServiceProvider();
+
+        var options = provider.GetRequiredService<IOptions<MetaEmbedsOptions>>().Value;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(options.ScriptMode, Is.EqualTo(EmbedScriptMode.None), "in-code script mode");
+            Assert.That(options.GraphApiVersion, Is.EqualTo("v27.0"), "in-code graph version");
+            Assert.That(options.Credentials.AppId, Is.EqualTo("123456"), "section values the code did not set still bind");
+        });
+    }
+
+    [Test]
+    public void MalformedUrlSegments_BindButAreNotUsedToBuildUrls()
+    {
+        var options = new MetaEmbedsOptions { GraphApiVersion = "/../evil", FacebookSdkLocale = "@evil.com" };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(options.GraphApiVersion, Is.EqualTo("/../evil"), "the raw value is preserved");
+            Assert.That(MetaOEmbedEndpoints.Instagram.EndpointUri(options).Host, Is.EqualTo("graph.facebook.com"));
+            Assert.That(MetaOEmbedEndpoints.FacebookSdk(options).Host, Is.EqualTo("connect.facebook.net"));
+            Assert.That(MetaEmbedsServiceCollectionExtensions.ToLanguageTag(options.EffectiveFacebookSdkLocale), Is.EqualTo("en-US"));
+        });
+    }
+
     private static IConfiguration BuildConfiguration(string json) =>
         new ConfigurationBuilder()
             .AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(json)))

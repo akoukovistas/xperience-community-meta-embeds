@@ -12,8 +12,4 @@ public static class EmbedSourceTypes
     /// </summary>
     public static string Normalize(string? value) =>
         string.IsNullOrWhiteSpace(value) ? Post : value.Trim().ToLowerInvariant();
-
-    /// <summary>True when the (normalized) value is one this package knows.</summary>
-    public static bool IsKnown(string? value) =>
-        string.Equals(Normalize(value), Post, StringComparison.Ordinal);
 }

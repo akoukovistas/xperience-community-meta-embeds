@@ -15,7 +15,8 @@ namespace XperienceCommunity.MetaEmbeds;
 /// <summary>
 /// Registration entry points. Calling them is optional: the package's Xperience module registers the same services
 /// with <c>TryAdd</c> semantics during application start, so a consumer's own registration placed before
-/// <c>AddKentico()</c>, or a <c>Replace</c> after it, always wins.
+/// <c>AddKentico()</c>, or a <c>Replace</c> after it, always wins. The same holds for options configured in code,
+/// which run after the configuration binder whichever order the calls are made in.
 /// </summary>
 public static class MetaEmbedsServiceCollectionExtensions
 {
@@ -29,13 +30,17 @@ public static class MetaEmbedsServiceCollectionExtensions
         return services.TryAddMetaEmbedsServices();
     }
 
-    /// <summary>Configures <see cref="MetaEmbedsOptions"/> in code and registers the services.</summary>
+    /// <summary>
+    /// Configures <see cref="MetaEmbedsOptions"/> in code and registers the services. The callback runs as a
+    /// <c>PostConfigure</c> action, so it wins over the <c>XperienceCommunityMetaEmbeds</c> section however the two
+    /// are ordered - the module's binder is registered during <c>AddKentico()</c> and would otherwise run last.
+    /// </summary>
     public static IServiceCollection AddXperienceCommunityMetaEmbeds(this IServiceCollection services, Action<MetaEmbedsOptions> configure)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configure);
 
-        services.AddOptions<MetaEmbedsOptions>().Configure(configure);
+        services.AddOptions<MetaEmbedsOptions>().PostConfigure(configure);
         return services.TryAddMetaEmbedsServices();
     }
 
@@ -81,10 +86,10 @@ public static class MetaEmbedsServiceCollectionExtensions
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     client.DefaultRequestHeaders.AcceptLanguage.Clear();
                     client.DefaultRequestHeaders.AcceptLanguage.Add(
-                        new StringWithQualityHeaderValue(ToLanguageTag(options.FacebookSdkLocale)));
+                        new StringWithQualityHeaderValue(ToLanguageTag(options.EffectiveFacebookSdkLocale)));
                     client.DefaultRequestHeaders.UserAgent.Clear();
                     client.DefaultRequestHeaders.UserAgent.Add(
-                        new ProductInfoHeaderValue("XperienceCommunity.MetaEmbeds", MetaEmbedsConstants.Version));
+                        new ProductInfoHeaderValue(MetaEmbedsConstants.ProductName, MetaEmbedsConstants.Version));
                 })
                 .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
                 {

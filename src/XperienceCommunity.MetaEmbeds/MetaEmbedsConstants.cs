@@ -23,8 +23,8 @@ public static class MetaEmbedsConstants
     /// <summary>Package version, read from the assembly's informational version (without build metadata).</summary>
     public static string Version { get; } = ReadVersion();
 
-    /// <summary>User-Agent product token sent on every oEmbed request.</summary>
-    public static string UserAgent => $"XperienceCommunity.MetaEmbeds/{Version}";
+    /// <summary>Product token of the User-Agent sent on every oEmbed request, paired with <see cref="Version"/>.</summary>
+    public const string ProductName = "XperienceCommunity.MetaEmbeds";
 
     /// <summary>Dummy cache key for one endpoint, e.g. <c>metaembeds|endpoint|instagram</c>.</summary>
     public static string CacheKeyForEndpoint(string endpointKey) => CacheKeyEndpointPrefix + endpointKey;

@@ -214,5 +214,6 @@ public class ServiceRegistrationTests
     private static int CountNonOptionDescriptors(IServiceCollection services) =>
         services.Count(d =>
             d.ServiceType != typeof(IConfigureOptions<MetaEmbedsOptions>)
+            && d.ServiceType != typeof(IPostConfigureOptions<MetaEmbedsOptions>)
             && d.ServiceType != typeof(IOptionsChangeTokenSource<MetaEmbedsOptions>));
 }

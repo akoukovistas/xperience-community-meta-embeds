@@ -13,10 +13,6 @@ internal sealed class OEmbedError
     [JsonPropertyName("message")]
     public string? Message { get; set; }
 
-    /// <summary>Error class, typically <c>OAuthException</c>.</summary>
-    [JsonPropertyName("type")]
-    public string? Type { get; set; }
-
     /// <summary>Graph API error code.</summary>
     [JsonPropertyName("code")]
     [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
@@ -31,15 +27,11 @@ internal sealed class OEmbedError
     [JsonPropertyName("is_transient")]
     public bool? IsTransient { get; set; }
 
-    /// <summary>Short user-facing title, e.g. <c>Media Not Found</c>.</summary>
-    [JsonPropertyName("error_user_title")]
-    public string? ErrorUserTitle { get; set; }
-
     /// <summary>User-facing explanation. Logged, never rendered.</summary>
     [JsonPropertyName("error_user_msg")]
     public string? ErrorUserMsg { get; set; }
 
-    /// <summary>Meta's trace id, useful when reporting an issue to Meta.</summary>
+    /// <summary>Meta's trace id. Included in the logged detail so it can be quoted when raising a ticket with Meta.</summary>
     [JsonPropertyName("fbtrace_id")]
     public string? FbTraceId { get; set; }
 }

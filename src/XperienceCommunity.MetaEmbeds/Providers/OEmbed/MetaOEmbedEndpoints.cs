@@ -42,7 +42,7 @@ public static class MetaOEmbedEndpoints
             Pattern(@"^https?://(www\.)?instagram\.com/(p|reel)/[A-Za-z0-9_-]+/?(\?.*)?$"),
             Pattern(@"^https?://(www\.)?instagram\.com/(?!stories/|explore/|accounts/|direct/|tv/|about/|legal/|developer/|api/|static/|nametag/|directory/)([A-Za-z0-9._]{1,30})/?(\?.*)?$"),
         ],
-        EndpointUri: o => new Uri($"https://graph.facebook.com/{o.GraphApiVersion}/instagram_oembed"),
+        EndpointUri: o => new Uri($"https://graph.facebook.com/{o.EffectiveGraphApiVersion}/instagram_oembed"),
         SdkScriptUri: _ => new Uri("https://www.instagram.com/embed.js"),
         ExpectedRootSelector: "blockquote.instagram-media",
         SanitizerProfile: "instagram");
@@ -55,7 +55,7 @@ public static class MetaOEmbedEndpoints
         [
             Pattern(@"^https?://(www\.)?facebook\.com/[^/?#]+/posts/[^/?#]+/?(\?.*)?$"),
         ],
-        EndpointUri: o => new Uri($"https://graph.facebook.com/{o.GraphApiVersion}/oembed_post"),
+        EndpointUri: o => new Uri($"https://graph.facebook.com/{o.EffectiveGraphApiVersion}/oembed_post"),
         SdkScriptUri: FacebookSdk,
         ExpectedRootSelector: "div.fb-post",
         SanitizerProfile: "facebook");
@@ -68,7 +68,7 @@ public static class MetaOEmbedEndpoints
         [
             Pattern(@"^https?://(www\.)?facebook\.com/reel/[0-9]+/?(\?.*)?$"),
         ],
-        EndpointUri: o => new Uri($"https://graph.facebook.com/{o.GraphApiVersion}/oembed_video"),
+        EndpointUri: o => new Uri($"https://graph.facebook.com/{o.EffectiveGraphApiVersion}/oembed_video"),
         SdkScriptUri: FacebookSdk,
         ExpectedRootSelector: "div.fb-video",
         SanitizerProfile: "facebook");
@@ -77,8 +77,11 @@ public static class MetaOEmbedEndpoints
     public static IReadOnlyList<MetaOEmbedEndpoint> Default { get; } = [Threads, Instagram, FacebookPost, FacebookVideo];
 
     /// <summary>The Facebook JS SDK URL for the configured locale and Graph version.</summary>
-    public static Uri FacebookSdk(MetaEmbedsOptions options) =>
-        new($"https://connect.facebook.net/{options.FacebookSdkLocale}/sdk.js#xfbml=1&version={options.GraphApiVersion}");
+    public static Uri FacebookSdk(MetaEmbedsOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        return new($"https://connect.facebook.net/{options.EffectiveFacebookSdkLocale}/sdk.js#xfbml=1&version={options.EffectiveGraphApiVersion}");
+    }
 
     private static Regex Pattern(string pattern) => new(pattern, Options, MatchTimeout);
 }

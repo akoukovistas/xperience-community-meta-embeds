@@ -178,6 +178,62 @@ public class EndpointRegistryTests
         });
     }
 
+    [TestCase("/v26.0")]
+    [TestCase("v26.0/../../evil")]
+    [TestCase("evil.com")]
+    [TestCase("@evil.com")]
+    [TestCase("v26")]
+    [TestCase("26.0")]
+    [TestCase("")]
+    [TestCase("  ")]
+    [TestCase("https://evil.com/v26.0")]
+    public void Endpoints_MalformedGraphVersion_FallsBackToDefaultAndKeepsTheHost(string version)
+    {
+        var options = new MetaEmbedsOptions { GraphApiVersion = version };
+
+        Assert.Multiple(() =>
+        {
+            foreach (var endpoint in new[] { MetaOEmbedEndpoints.Instagram, MetaOEmbedEndpoints.FacebookPost, MetaOEmbedEndpoints.FacebookVideo })
+            {
+                var uri = endpoint.EndpointUri(options);
+                Assert.That(uri.Host, Is.EqualTo("graph.facebook.com"), endpoint.Key);
+                Assert.That(uri.AbsolutePath, Does.StartWith("/v25.0/"), endpoint.Key);
+            }
+
+            Assert.That(MetaOEmbedEndpoints.FacebookSdk(options).AbsoluteUri, Does.EndWith("version=v25.0"));
+        });
+    }
+
+    [TestCase("/en_US")]
+    [TestCase("en")]
+    [TestCase("en_USA")]
+    [TestCase("en-US")]
+    [TestCase("@evil.com")]
+    [TestCase("")]
+    [TestCase("../../evil")]
+    public void Endpoints_MalformedSdkLocale_FallsBackToDefaultAndKeepsTheHost(string locale)
+    {
+        var sdk = MetaOEmbedEndpoints.FacebookSdk(new MetaEmbedsOptions { FacebookSdkLocale = locale });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sdk.Host, Is.EqualTo("connect.facebook.net"));
+            Assert.That(sdk.AbsoluteUri, Is.EqualTo("https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v25.0"));
+        });
+    }
+
+    [Test]
+    public void Endpoints_WellFormedGraphVersionAndLocale_AreUsedVerbatim()
+    {
+        var options = new MetaEmbedsOptions { GraphApiVersion = "v3.11", FacebookSdkLocale = "pt_BR" };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(MetaOEmbedEndpoints.Instagram.EndpointUri(options).AbsoluteUri, Is.EqualTo("https://graph.facebook.com/v3.11/instagram_oembed"));
+            Assert.That(MetaOEmbedEndpoints.FacebookSdk(options).AbsoluteUri, Is.EqualTo("https://connect.facebook.net/pt_BR/sdk.js#xfbml=1&version=v3.11"));
+        });
+    }
+
     private void AssertClassification(string input, string? expected) =>
         Assert.That(Classify(input), Is.EqualTo(expected), input);
 

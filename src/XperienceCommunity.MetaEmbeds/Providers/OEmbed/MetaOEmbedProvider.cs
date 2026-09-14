@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 
@@ -30,6 +31,7 @@ public sealed class MetaOEmbedProvider : IEmbedProvider
     private static readonly EventId TransientEvent = new(1003, "METAEMBEDS_TRANSIENT");
     private static readonly EventId UnexpectedMarkupEvent = new(1004, "METAEMBEDS_UNEXPECTED_MARKUP");
     private static readonly EventId InternalEvent = new(1005, "METAEMBEDS_INTERNAL");
+    private static readonly EventId InvalidOptionEvent = new(1006, "METAEMBEDS_INVALID_OPTION");
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -45,6 +47,9 @@ public sealed class MetaOEmbedProvider : IEmbedProvider
     private readonly IEmbedResultCache cache;
     private readonly IOptionsMonitor<MetaEmbedsOptions> options;
     private readonly ILogger<MetaOEmbedProvider> logger;
+
+    /// <summary>Option values already reported as unusable, so a misconfiguration is logged once rather than per render.</summary>
+    private readonly ConcurrentDictionary<string, byte> reportedInvalidOptions = new(StringComparer.Ordinal);
 
     /// <summary>Creates the provider. All dependencies are registered by <c>AddXperienceCommunityMetaEmbeds</c>.</summary>
     public MetaOEmbedProvider(
@@ -103,16 +108,44 @@ public sealed class MetaOEmbedProvider : IEmbedProvider
         }
 
         var current = options.CurrentValue;
+        WarnIfIgnored(nameof(MetaEmbedsOptions.GraphApiVersion), current.GraphApiVersion, current.EffectiveGraphApiVersion);
+        WarnIfIgnored(nameof(MetaEmbedsOptions.FacebookSdkLocale), current.FacebookSdkLocale, current.EffectiveFacebookSdkLocale);
+
         var parameters = OEmbedRequestParameters.For(endpoint, request.Parameters);
         var key = new EmbedCacheKey(
             endpoint.Key,
             urlMatcher.ToCacheForm(normalized),
             Authenticated: !current.Credentials.IsEmpty,
-            current.GraphApiVersion,
+            current.EffectiveGraphApiVersion,
             Variant: parameters.CacheVariant);
         var policy = EmbedCachePolicy.For(current, endpoint.Key);
 
         return cache.GetOrAddAsync(key, ct => FetchAsync(endpoint, normalized, current, parameters, ct), policy, cancellationToken);
+    }
+
+    /// <summary>
+    /// Both option values are interpolated into URLs, so an unusable one falls back to the package default rather than
+    /// changing the host a call goes to. That fallback is silent by design in the URL builders, so say so once here.
+    /// </summary>
+    private void WarnIfIgnored(string option, string? configured, string effective)
+    {
+        if (string.Equals(configured, effective, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        // The value comes from appsettings, so it is operator-controlled rather than untrusted - but it still ends up
+        // in a log line, so bound its length.
+        var reported = configured is null ? "(null)" : configured[..Math.Min(configured.Length, 64)];
+        if (reportedInvalidOptions.TryAdd($"{option}|{reported}", 0))
+        {
+            logger.LogWarning(
+                InvalidOptionEvent,
+                "MetaEmbeds option {Option} has the unusable value {Configured}; using {Effective} instead. URLs are built from the fallback.",
+                option,
+                reported,
+                effective);
+        }
     }
 
     /// <summary>One HTTP round trip to Meta plus sanitising. Only caller cancellation escapes as an exception.</summary>
@@ -226,7 +259,7 @@ public sealed class MetaOEmbedProvider : IEmbedProvider
         catch (Exception ex)
         {
             logger.LogError(InternalEvent, ex, "Meta oEmbed {Endpoint}: unexpected error while embedding {Url}", endpoint.Key, normalized);
-            return EmbedResult.Failed(EmbedFailureKind.Internal, Redact(ex.Message, token), ex);
+            return EmbedResult.Failed(EmbedFailureKind.Internal, $"{ex.GetType().Name}: {Redact(ex.Message, token)}");
         }
     }
 
@@ -246,11 +279,18 @@ public sealed class MetaOEmbedProvider : IEmbedProvider
         return new Uri(builder.ToString(), UriKind.Absolute);
     }
 
+    /// <summary>
+    /// Logs the exception and returns a failure without it. Everything this provider returns is cached for up to
+    /// <see cref="MetaEmbedsOptions.TransientFailureCacheDuration"/>, and an exception would pin its stack trace and
+    /// whatever its object graph references in the memory cache for that long. The log already has the full detail.
+    /// </summary>
     private EmbedResult Transient(MetaOEmbedEndpoint endpoint, Uri normalized, string message, Exception? exception)
     {
         logger.LogWarning(TransientEvent, exception, "Meta oEmbed {Endpoint}: transient failure for {Url}. {Message}",
             endpoint.Key, normalized, message);
-        return EmbedResult.Failed(EmbedFailureKind.Transient, message, exception);
+        return EmbedResult.Failed(
+            EmbedFailureKind.Transient,
+            exception is null ? message : $"{message} ({exception.GetType().Name})");
     }
 
     private EmbedResult MapError(MetaOEmbedEndpoint endpoint, Uri normalized, int status, OEmbedError? error, string? token)
@@ -258,7 +298,8 @@ public sealed class MetaOEmbedProvider : IEmbedProvider
         var code = error?.Code;
         var subcode = error?.ErrorSubcode;
         var metaMessage = Redact(error?.ErrorUserMsg ?? error?.Message ?? "(no message)", token);
-        var detail = $"Meta error code {code?.ToString() ?? "-"}/{subcode?.ToString() ?? "-"} (HTTP {status}): {metaMessage}";
+        var trace = string.IsNullOrWhiteSpace(error?.FbTraceId) ? string.Empty : $" [fbtrace_id {error.FbTraceId}]";
+        var detail = $"Meta error code {code?.ToString() ?? "-"}/{subcode?.ToString() ?? "-"} (HTTP {status}): {metaMessage}{trace}";
 
         EmbedFailureKind kind;
         string providerMessage;

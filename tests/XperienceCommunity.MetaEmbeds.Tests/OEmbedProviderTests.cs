@@ -471,7 +471,20 @@ public class OEmbedProviderTests
             Assert.That(result.Failure.ProviderSubcode, Is.Null);
             Assert.That(result.Failure.ProviderMessage, Does.Contain("credentials").IgnoreCase);
             Assert.That(result.Failure.ProviderMessage, Does.Contain("Cannot parse access token"));
+            Assert.That(result.Failure.ProviderMessage, Does.Contain("fbtrace_id AbC"), "the id Meta support asks for");
         });
+    }
+
+    [Test]
+    public async Task Resolve_ErrorWithoutTraceId_OmitsTheTraceSuffix()
+    {
+        var h = new Harness();
+        h.Handler.RespondWithJson(HttpStatusCode.BadRequest,
+            """{"error":{"message":"Invalid parameter","code":100,"error_subcode":2207047}}""");
+
+        var result = await h.ResolveAsync(InstagramPostUrl);
+
+        Assert.That(result.Failure!.ProviderMessage, Does.Not.Contain("fbtrace_id"));
     }
 
     [Test]
@@ -554,7 +567,9 @@ public class OEmbedProviderTests
         var result = await h.ResolveAsync(InstagramPostUrl);
 
         Assert.That(result.Failure?.Kind, Is.EqualTo(EmbedFailureKind.Transient));
-        Assert.That(result.Failure!.Exception, Is.InstanceOf<HttpRequestException>());
+        // The result is cacheable, so it names the exception type instead of holding the exception itself.
+        Assert.That(result.Failure!.Exception, Is.Null);
+        Assert.That(result.Failure.ProviderMessage, Does.Contain(nameof(HttpRequestException)));
         var entry = h.Logger.Entries.Single(e => e.Level == LogLevel.Warning);
         Assert.That(entry.Exception, Is.InstanceOf<HttpRequestException>());
     }
@@ -584,7 +599,8 @@ public class OEmbedProviderTests
         var result = await h.ResolveAsync(InstagramPostUrl);
 
         Assert.That(result.Failure?.Kind, Is.EqualTo(EmbedFailureKind.Transient));
-        Assert.That(result.Failure!.Exception, Is.InstanceOf<OperationCanceledException>());
+        Assert.That(result.Failure!.Exception, Is.Null, "cacheable failures do not retain the exception");
+        Assert.That(h.Logger.Entries.Single(e => e.Level == LogLevel.Warning).Exception, Is.InstanceOf<OperationCanceledException>());
     }
 
     [Test]
@@ -846,10 +862,12 @@ public class OEmbedProviderTests
         var result = await h.ResolveAsync(InstagramPostUrl);
 
         Assert.That(result.Failure?.Kind, Is.EqualTo(EmbedFailureKind.Internal));
-        Assert.That(result.Failure!.Exception, Is.InstanceOf<InvalidOperationException>());
+        Assert.That(result.Failure!.Exception, Is.Null, "cacheable failures do not retain the exception");
+        Assert.That(result.Failure.ProviderMessage, Does.Contain(nameof(InvalidOperationException)));
         var entry = h.Logger.Entries.Single(e => e.Level >= LogLevel.Information);
         Assert.That(entry.Level, Is.EqualTo(LogLevel.Error));
         Assert.That(entry.Id.Name, Is.EqualTo("METAEMBEDS_INTERNAL"));
+        Assert.That(entry.Exception, Is.InstanceOf<InvalidOperationException>());
     }
 
     [Test]

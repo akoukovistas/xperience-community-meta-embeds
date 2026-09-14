@@ -21,6 +21,10 @@ public sealed class EmbedFailure
     /// <summary>Meta's numeric <c>error_subcode</c>, when present.</summary>
     public int? ProviderSubcode { get; init; }
 
-    /// <summary>The exception that caused the failure, when there was one. Logged, never rendered.</summary>
+    /// <summary>
+    /// The exception that caused the failure, when there was one. Logged, never rendered. Only ever set on failures
+    /// produced outside the cache (<see cref="EmbedResolver"/>'s own guards): anything a provider returns may be
+    /// cached, and a cached exception would pin its object graph in memory for the lifetime of the entry.
+    /// </summary>
     public Exception? Exception { get; init; }
 }

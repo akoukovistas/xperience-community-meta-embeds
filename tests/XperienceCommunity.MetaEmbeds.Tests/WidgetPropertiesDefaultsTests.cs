@@ -52,14 +52,14 @@ public class WidgetPropertiesDefaultsTests
     }
 
     [Test]
-    public void Deserialize_UnknownSourceType_IsNormalizedButNotKnown()
+    public void Deserialize_UnknownSourceType_IsNormalizedToLowerCase()
     {
         var properties = JsonConvert.DeserializeObject<MetaEmbedWidgetProperties>(
             "{\"url\":\"https://www.instagram.com/p/fA9uwTtkSN/\",\"sourceType\":\" FEED \"}");
 
         Assert.That(properties, Is.Not.Null);
         Assert.That(EmbedSourceTypes.Normalize(properties!.SourceType), Is.EqualTo("feed"));
-        Assert.That(EmbedSourceTypes.IsKnown(properties.SourceType), Is.False);
+        Assert.That(EmbedSourceTypes.Normalize(properties.SourceType), Is.Not.EqualTo(EmbedSourceTypes.Post), "the resolver treats this as unknown and falls back");
     }
 
     [Test]
