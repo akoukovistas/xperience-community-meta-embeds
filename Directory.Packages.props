@@ -17,7 +17,7 @@
     <PackageVersion Include="HtmlSanitizer" Version="9.2.995" />
   </ItemGroup>
   <ItemGroup Label="Analyzers">
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.33.0.1635" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.34.0.3385" />
   </ItemGroup>
   <ItemGroup Label="Tests">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
