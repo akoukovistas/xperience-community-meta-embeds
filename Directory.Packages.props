@@ -16,8 +16,8 @@
       the published package, so raising them would force every consuming site above the AngleSharp that Xperience
       ships and tests with, for no gain to us. Bump when Kentico bumps.
     -->
-    <PackageVersion Include="AngleSharp" Version="1.7.1" />
-    <PackageVersion Include="AngleSharp.Css" Version="1.0.1" />
+    <PackageVersion Include="AngleSharp" Version="1.7.3" />
+    <PackageVersion Include="AngleSharp.Css" Version="1.0.2" />
     <!-- Match the HtmlSanitizer version Kentico.Xperience.WebApp already depends on, so nothing new is pulled
          transitively. Re-check when bumping the Kentico packages. -->
     <PackageVersion Include="HtmlSanitizer" Version="9.2.995" />
