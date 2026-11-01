@@ -20,7 +20,7 @@
     <PackageVersion Include="AngleSharp.Css" Version="1.0.2" />
     <!-- Match the HtmlSanitizer version Kentico.Xperience.WebApp already depends on, so nothing new is pulled
          transitively. Re-check when bumping the Kentico packages. -->
-    <PackageVersion Include="HtmlSanitizer" Version="9.2.995" />
+    <PackageVersion Include="HtmlSanitizer" Version="9.2.1039" />
   </ItemGroup>
   <ItemGroup Label="Analyzers">
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
