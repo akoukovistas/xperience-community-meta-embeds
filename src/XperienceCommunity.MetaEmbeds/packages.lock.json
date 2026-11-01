@@ -19,12 +19,12 @@
       },
       "HtmlSanitizer": {
         "type": "Direct",
-        "requested": "[9.2.995, )",
-        "resolved": "9.2.995",
-        "contentHash": "Yws4FratoTx4FDlvOjQTfuE49ATTVwAxNosv2CE2XqnOcmPuWWOWbLwEYP5w9uqvrGRyOgQloisKVokrgxKaXg==",
+        "requested": "[9.2.1039, )",
+        "resolved": "9.2.1039",
+        "contentHash": "PKxy1hYknAij8YlHCC2a9GSqzUd4bh3IvY+abJBvOH1FKcZpbyafEHtdFcXQBt12Y7hNPkNEOP6Qa7uKNSs/yA==",
         "dependencies": {
-          "AngleSharp": "1.7.1",
-          "AngleSharp.Css": "1.0.1"
+          "AngleSharp": "1.7.2",
+          "AngleSharp.Css": "1.0.2"
         }
       },
       "Kentico.Xperience.WebApp": {
